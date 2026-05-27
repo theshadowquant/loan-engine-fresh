@@ -1971,7 +1971,10 @@
         document.getElementById('payLoanInfo').innerHTML = '';
         document.getElementById('payAmount').value = '';
         document.getElementById('payRef').value = '';
+        // Immediately refresh outstanding balance on the card
         loadPaymentHistory();
+        loadDashboard(true);
+        fetchLoanInfo(); // refresh loan info box too if user stays on payments page
       } else toast(r?.data?.error || 'Payment failed', 'error');
     }
 
