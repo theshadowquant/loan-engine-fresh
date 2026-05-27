@@ -325,7 +325,7 @@ select.form-input{cursor:pointer}
 <script>
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:3000/api'
-  : 'https://shadowquant-backend.onrender.com/api';
+  : 'https://loan-engine-backend-rznd.onrender.com/api';
 let TOKEN = localStorage.getItem('sq_admin_token') || localStorage.getItem('sq_token');
 let USER  = JSON.parse(localStorage.getItem('sq_admin_user') || 'null');
 let allApps = [];
