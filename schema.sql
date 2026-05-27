@@ -68,7 +68,7 @@ CREATE TABLE loan_applications (
     interest_rate DECIMAL(6,4) DEFAULT 12.0000,
     tenure_months SMALLINT UNSIGNED NOT NULL,
     purpose TEXT,
-    status ENUM('PENDING','UNDER_REVIEW','APPROVED','REJECTED') DEFAULT 'PENDING',
+    status ENUM('PENDING','APPLIED','UNDER_REVIEW','APPROVED','REJECTED') DEFAULT 'PENDING',
     reviewed_by BIGINT UNSIGNED,
     reviewed_at TIMESTAMP NULL,
     rejection_reason TEXT,
