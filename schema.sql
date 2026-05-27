@@ -169,6 +169,7 @@ CREATE TABLE penalties (
 CREATE TABLE notifications (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED,
+    type VARCHAR(50),
     message TEXT,
     is_read TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
