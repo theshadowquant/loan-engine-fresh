@@ -126,7 +126,7 @@ CREATE TABLE emi_schedule (
     emi_amount DECIMAL(15,2),
     principal_component DECIMAL(15,2),
     interest_component DECIMAL(15,2),
-    outstanding_balance DECIMAL(15,2),
+    balance_after DECIMAL(15,2),
     status ENUM('PENDING','PAID','OVERDUE') DEFAULT 'PENDING',
 
     FOREIGN KEY (loan_id) REFERENCES loans(id)
