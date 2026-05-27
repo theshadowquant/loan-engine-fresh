@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
+const db = require('../config/db');
 require('dotenv').config();
 
+// ── Standard auth: just verifies JWT ──────────────────────────
 module.exports = (req, res, next) => {
   const header = req.headers.authorization;
   if (!header || !header.startsWith('Bearer '))

@@ -397,9 +397,31 @@ async function doLogin() {
   const msg = document.getElementById('authMsg');
   msg.style.display = 'none';
   try {
+    // Step 1: Standard login
     const r = await fetch(`${API}/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password}) });
     const d = await r.json();
     if (!r.ok) { msg.className='auth-msg error'; msg.textContent=d.error||'Login failed'; msg.style.display='block'; return; }
+
+    // Step 2: Verify this user actually has ADMIN role before granting access
+    const roleCheck = await fetch(`${API}/admin/applications`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + d.accessToken }
+    });
+
+    if (roleCheck.status === 403) {
+      msg.className = 'auth-msg error';
+      msg.textContent = '⛔ Access denied. This account does not have administrator privileges.';
+      msg.style.display = 'block';
+      return;
+    }
+
+    if (roleCheck.status === 401) {
+      msg.className = 'auth-msg error';
+      msg.textContent = 'Authentication error. Please try again.';
+      msg.style.display = 'block';
+      return;
+    }
+
     TOKEN = d.accessToken;
     USER  = d.user;
     localStorage.setItem('sq_admin_token', TOKEN);

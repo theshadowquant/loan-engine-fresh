@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const adminAuth = require('../middleware/adminAuth');
 const db = require('../config/db');
 const Decimal = require('decimal.js');
 
 // ── GET ALL APPLICATIONS (Admin) ──────────────────────────────
-router.get('/applications', auth, async (req, res, next) => {
+router.get('/applications', adminAuth, async (req, res, next) => {
   try {
     const [rows] = await db.query(`
       SELECT la.*, u.first_name, u.last_name, u.email
@@ -18,7 +18,7 @@ router.get('/applications', auth, async (req, res, next) => {
 });
 
 // ── APPROVE APPLICATION ───────────────────────────────────────
-router.post('/applications/:id/approve', auth, async (req, res, next) => {
+router.post('/applications/:id/approve', adminAuth, async (req, res, next) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
@@ -96,7 +96,7 @@ router.post('/applications/:id/approve', auth, async (req, res, next) => {
 });
 
 // ── REJECT APPLICATION ────────────────────────────────────────
-router.post('/applications/:id/reject', auth, async (req, res, next) => {
+router.post('/applications/:id/reject', adminAuth, async (req, res, next) => {
   try {
     const { reason } = req.body;
     const [[app]] = await db.query('SELECT * FROM loan_applications WHERE id = ?', [req.params.id]);
@@ -117,7 +117,7 @@ router.post('/applications/:id/reject', auth, async (req, res, next) => {
 });
 
 // ── GET ALL LOANS (Admin) ─────────────────────────────────────
-router.get('/loans', auth, async (req, res, next) => {
+router.get('/loans', adminAuth, async (req, res, next) => {
   try {
     const [rows] = await db.query(`
       SELECT l.*, u.first_name, u.last_name, u.email
@@ -130,7 +130,7 @@ router.get('/loans', auth, async (req, res, next) => {
 });
 
 // ── GET ALL USERS (Admin) ─────────────────────────────────────
-router.get('/users', auth, async (req, res, next) => {
+router.get('/users', adminAuth, async (req, res, next) => {
   try {
     const [rows] = await db.query(
       'SELECT id, email, first_name, last_name, phone_number, pan_number, is_active, is_verified, created_at FROM users ORDER BY created_at DESC'
