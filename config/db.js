@@ -9,7 +9,8 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || 'loan_engine',
   waitForConnections: true,
   connectionLimit: 10,
-  decimalNumbers: false
+  decimalNumbers: false,
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
 });
 
 module.exports = pool;
