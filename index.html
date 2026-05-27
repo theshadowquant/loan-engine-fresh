@@ -1,0 +1,2427 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShadowQuant Fintech</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    :root {
+      --gold: #1c52ff;
+      --gold2: #4b73ff;
+      --green: #10b981;
+      --green-dim: rgba(16, 185, 129, 0.1);
+      --red: #ef4444;
+      --red-dim: rgba(239, 68, 68, 0.1);
+      --blue: #3b82f6;
+      --blue-dim: rgba(59, 130, 246, 0.1);
+      --amber: #f59e0b;
+      --amber-dim: rgba(245, 158, 11, 0.1);
+      --r: 12px;
+      --r2: 20px;
+    }
+    :root, :root[data-theme="dark"] {
+      --bg: #0b0f19;
+      --bg2: #111827;
+      --bg3: #1f2937;
+      --surface: #374151;
+      --surface2: #4b5563;
+      --border: rgba(255, 255, 255, 0.05);
+      --border2: rgba(255, 255, 255, 0.08);
+      --text: #f9fafb;
+      --text2: #9ca3af;
+      --text3: #6b7280;
+      --gold-dim: rgba(28, 82, 255, 0.1);
+      --gold-glow: rgba(28, 82, 255, 0.25);
+    }
+    :root[data-theme="light"] {
+      --bg: #f8fafc;
+      --bg2: #ffffff;
+      --bg3: #f1f5f9;
+      --surface: #e2e8f0;
+      --surface2: #cbd5e1;
+      --border: rgba(0, 0, 0, 0.04);
+      --border2: rgba(0, 0, 0, 0.06);
+      --text: #0f172a;
+      --text2: #475569;
+      --text3: #64748b;
+      --gold-dim: rgba(28, 82, 255, 0.06);
+      --gold-glow: rgba(28, 82, 255, 0.15);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden
+    }
+
+    /* AUTH */
+    .auth-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at 30% 50%, rgba(212, 168, 67, 0.05) 0%, transparent 60%)
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 24px;
+      padding: 44px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5)
+    }
+
+    .auth-logo {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--gold);
+      margin-bottom: 2px
+    }
+
+    .auth-logo span {
+      color: var(--text)
+    }
+
+    .auth-tagline {
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 36px
+    }
+
+    .auth-tabs {
+      display: flex;
+      background: var(--bg3);
+      border-radius: var(--r);
+      padding: 4px;
+      margin-bottom: 28px;
+      gap: 4px
+    }
+
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 9px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text3);
+      transition: all .15s
+    }
+
+    .auth-tab.active {
+      background: var(--surface2);
+      color: var(--text)
+    }
+
+    .form-group {
+      margin-bottom: 14px
+    }
+
+    .form-label {
+      display: block;
+      font-size: 11px;
+      color: var(--text3);
+      letter-spacing: .5px;
+      margin-bottom: 5px
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color .15s
+    }
+
+    .form-input:focus {
+      border-color: var(--gold)
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px
+    }
+
+    .form-btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--gold);
+      border: none;
+      border-radius: var(--r);
+      color: #000;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all .15s;
+      letter-spacing: .3px
+    }
+
+    .form-btn:hover {
+      background: var(--gold2)
+    }
+
+    .form-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed
+    }
+
+    .auth-msg {
+      padding: 10px 14px;
+      border-radius: var(--r);
+      font-size: 13px;
+      margin-bottom: 14px;
+      display: none
+    }
+
+    .auth-msg.error {
+      background: var(--red-dim);
+      border: 1px solid rgba(255, 79, 79, .3);
+      color: var(--red)
+    }
+
+    .auth-msg.success {
+      background: var(--green-dim);
+      border: 1px solid rgba(40, 214, 138, .3);
+      color: var(--green)
+    }
+
+    /* APP SHELL */
+    .app {
+      display: none;
+      min-height: 100vh
+    }
+
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 100
+    }
+
+    .logo-wrap {
+      padding: 28px 22px 22px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .logo {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: -0.5px
+    }
+
+    .logo span {
+      color: var(--text)
+    }
+
+    .logo-sub {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-top: 3px
+    }
+
+    .nav {
+      flex: 1;
+      padding: 14px 10px
+    }
+
+    .nav-section {
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text3);
+      padding: 10px 12px 6px
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--r);
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text2);
+      transition: all .15s;
+      margin-bottom: 1px;
+      border: 1px solid transparent
+    }
+
+    .nav-item:hover {
+      background: var(--surface);
+      color: var(--text)
+    }
+
+    .nav-item.active {
+      background: var(--gold-dim);
+      color: var(--gold);
+      border-color: rgba(212, 168, 67, .2)
+    }
+
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--red);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 99px;
+      display: none
+    }
+
+    .sidebar-footer {
+      padding: 14px;
+      border-top: 1px solid var(--border)
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: var(--r);
+      background: var(--surface);
+      cursor: pointer
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--gold-dim);
+      border: 1px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gold);
+      flex-shrink: 0
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .user-role {
+      font-size: 11px;
+      color: var(--text3)
+    }
+
+    /* MAIN */
+    .main {
+      margin-left: 240px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh
+    }
+
+    .topbar {
+      height: 64px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+      gap: 14px;
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 50
+    }
+
+    .topbar-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 700
+    }
+
+    .topbar-right {
+      margin-left: auto;
+      display: flex;
+      gap: 10px;
+      align-items: center
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green)
+    }
+
+    .live-label {
+      font-size: 12px;
+      color: var(--text3)
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: var(--r);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .15s;
+      font-family: 'Plus Jakarta Sans', sans-serif
+    }
+
+    .btn-gold {
+      background: var(--gold);
+      color: #000;
+      font-weight: 600
+    }
+
+    .btn-gold:hover {
+      background: var(--gold2)
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--text2)
+    }
+
+    .btn-ghost:hover {
+      background: var(--surface);
+      color: var(--text)
+    }
+
+    .content {
+      padding: 32px;
+      flex: 1
+    }
+
+    /* PAGES */
+    .page {
+      display: none
+    }
+
+    .page.active {
+      display: block
+    }
+
+    .page-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 4px
+    }
+
+    .page-sub {
+      font-size: 13px;
+      color: var(--text3);
+      margin-bottom: 28px
+    }
+
+    /* STATS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px
+    }
+
+    .stat {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r2);
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .stat::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px
+    }
+
+    .stat.gold::before {
+      background: var(--gold)
+    }
+
+    .stat.green::before {
+      background: var(--green)
+    }
+
+    .stat.blue::before {
+      background: var(--blue)
+    }
+
+    .stat.red::before {
+      background: var(--red)
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text3);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 10px
+    }
+
+    .stat-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 700
+    }
+
+    .stat-val.gold {
+      color: var(--gold)
+    }
+
+    .stat-val.green {
+      color: var(--green)
+    }
+
+    .stat-val.blue {
+      color: var(--blue)
+    }
+
+    .stat-val.red {
+      color: var(--red)
+    }
+
+    .stat-hint {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 5px
+    }
+
+    /* CARD */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r2);
+      overflow: hidden;
+      margin-bottom: 20px
+    }
+
+    .card-head {
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700
+    }
+
+    .card-body {
+      padding: 22px
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px
+    }
+
+    /* TABLE */
+    .tbl {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    .tbl th {
+      text-align: left;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text3);
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .tbl td {
+      padding: 13px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .tbl tr:last-child td {
+      border-bottom: none
+    }
+
+    .tbl tbody tr:hover td {
+      background: var(--surface)
+    }
+
+    /* BADGE */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600
+    }
+
+    .badge-green {
+      background: var(--green-dim);
+      color: var(--green)
+    }
+
+    .badge-amber {
+      background: var(--amber-dim);
+      color: var(--amber)
+    }
+
+    .badge-red {
+      background: var(--red-dim);
+      color: var(--red)
+    }
+
+    .badge-blue {
+      background: var(--blue-dim);
+      color: var(--blue)
+    }
+
+    .badge-gold {
+      background: var(--gold-dim);
+      color: var(--gold)
+    }
+
+    .badge-gray {
+      background: rgba(255, 255, 255, .06);
+      color: var(--text2)
+    }
+
+    /* EMI PREVIEW */
+    .emi-preview {
+      background: var(--bg3);
+      border: 1px solid var(--gold-dim);
+      border-radius: var(--r2);
+      padding: 24px;
+      position: sticky;
+      top: 80px
+    }
+
+    .emi-preview-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 20px
+    }
+
+    .emi-big {
+      background: var(--gold-dim);
+      border: 1px solid rgba(212, 168, 67, .25);
+      border-radius: var(--r);
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px
+    }
+
+    .emi-big-label {
+      font-size: 11px;
+      color: var(--text3);
+      letter-spacing: 1px;
+      text-transform: uppercase
+    }
+
+    .emi-big-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--gold);
+      margin-top: 4px
+    }
+
+    .emi-big-sub {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 2px
+    }
+
+    .preview-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px
+    }
+
+    .preview-row:last-child {
+      border-bottom: none
+    }
+
+    .preview-key {
+      color: var(--text3)
+    }
+
+    .preview-val {
+      font-family: 'DM Mono', monospace;
+      font-weight: 500
+    }
+
+    /* PAYMENT CARD */
+    .pay-info {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      padding: 16px;
+      margin-bottom: 16px
+    }
+
+    .pay-id {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--gold);
+      margin-bottom: 2px
+    }
+
+    .pay-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700
+    }
+
+    .pay-meta {
+      display: flex;
+      gap: 20px;
+      margin-top: 10px
+    }
+
+    .pay-meta-item {
+      font-size: 12px;
+      color: var(--text3)
+    }
+
+    .pay-meta-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--text);
+      display: block;
+      margin-top: 2px
+    }
+
+    /* EMPTY */
+    .empty {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text3)
+    }
+
+    .empty-icon {
+      font-size: 36px;
+      margin-bottom: 12px
+    }
+
+    .empty-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      color: var(--text2);
+      margin-bottom: 6px
+    }
+
+    .empty-sub {
+      font-size: 13px;
+      line-height: 1.6
+    }
+
+    /* SPINNER */
+    .spinner-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin .7s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    /* TOAST */
+    .toasts {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .toast {
+      padding: 13px 18px;
+      border-radius: var(--r);
+      font-size: 13px;
+      min-width: 260px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn .2s ease
+    }
+
+    .toast.success {
+      background: #0a2018;
+      border-color: rgba(40, 214, 138, .4);
+      color: var(--green)
+    }
+
+    .toast.error {
+      background: #200a0a;
+      border-color: rgba(255, 79, 79, .4);
+      color: var(--red)
+    }
+
+    .toast.info {
+      background: #0a1220;
+      border-color: rgba(79, 141, 232, .4);
+      color: var(--blue)
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(16px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    /* NOTIF */
+    .notif-item {
+      display: flex;
+      gap: 14px;
+      padding: 16px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .notif-item:last-child {
+      border-bottom: none
+    }
+
+    .notif-item.unread {
+      background: var(--bg3)
+    }
+
+    .notif-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0
+    }
+
+    .notif-type {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 3px
+    }
+
+    .notif-msg {
+      font-size: 12px;
+      color: var(--text3);
+      line-height: 1.5
+    }
+
+    .notif-time {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 4px
+    }
+
+    /* PROFILE */
+    .profile-avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: var(--gold-dim);
+      border: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--gold)
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 20px
+    }
+
+    .profile-field {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px
+    }
+
+    .profile-field-label {
+      font-size: 11px;
+      color: var(--text3);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      margin-bottom: 5px
+    }
+
+    .profile-field-val {
+      font-size: 14px
+    }
+
+    select.form-input {
+      cursor: pointer
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 2px
+    }
+
+    /* Receipt Modal */
+    .receipt-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(4, 4, 8, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .receipt-card {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 680px;
+      padding: 40px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8);
+      position: relative;
+      background-image: radial-gradient(circle at 100% 0%, rgba(28, 82, 255, 0.05) 0%, transparent 60%);
+      border-top: 6px solid var(--gold);
+    }
+    .receipt-header-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 20px;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .receipt-corp-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .receipt-corp-title span {
+      color: var(--gold);
+    }
+    .receipt-corp-meta {
+      font-size: 10px;
+      color: var(--text3);
+      line-height: 1.6;
+      margin-top: 4px;
+    }
+    .receipt-meta-block {
+      text-align: right;
+    }
+    .receipt-meta-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--gold);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .receipt-meta-item {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .receipt-meta-item span {
+      color: var(--text3);
+    }
+    .receipt-payer-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 16px 20px;
+      margin-bottom: 28px;
+    }
+    .receipt-payer-title {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text3);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .receipt-payer-info {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text2);
+    }
+    .receipt-payer-info strong {
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .receipt-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+    }
+    .receipt-table th {
+      text-align: left;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text3);
+      padding: 8px 12px;
+      border-bottom: 2px solid var(--border);
+    }
+    .receipt-table td {
+      padding: 14px 12px;
+      font-size: 13px;
+      color: var(--text2);
+      border-bottom: 1px solid var(--border);
+    }
+    .receipt-summary-box {
+      margin-left: auto;
+      width: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 28px;
+      font-size: 13px;
+    }
+    .receipt-summary-row {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text3);
+    }
+    .receipt-summary-row.total {
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--gold);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .receipt-footer-seal-block {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 20px;
+      border-top: 1px dashed var(--border);
+    }
+    .receipt-seal-text {
+      font-size: 10px;
+      color: var(--text3);
+      line-height: 1.5;
+      max-width: 380px;
+    }
+    .receipt-badge-certified {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: #10b981;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .receipt-badge-certified-dot {
+      width: 6px;
+      height: 6px;
+      background: #10b981;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 6px #10b981;
+    }
+    .receipt-words {
+      font-size: 11px;
+      color: var(--text2);
+      line-height: 1.5;
+      text-align: center;
+      background: rgba(255,255,255,0.02);
+      padding: 10px 14px;
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+      font-style: italic;
+    }
+    .receipt-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    
+    @media print {
+      body > *:not(.receipt-modal-overlay) {
+        display: none !important;
+      }
+      .receipt-modal-overlay {
+        display: flex !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        padding: 0;
+      }
+      .receipt-card {
+        border: none !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+        background: white !important;
+        color: black !important;
+        padding: 40px !important;
+      }
+      .receipt-logo, .receipt-amount-val {
+        color: #000 !important;
+      }
+      .receipt-amount-box {
+        background: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
+      }
+      .receipt-lbl {
+        color: #6c757d !important;
+      }
+      .receipt-val {
+        color: #000 !important;
+      }
+      .receipt-words {
+        background: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
+        color: #495057 !important;
+      }
+      .digital-stamp {
+        border-color: #28a745 !important;
+        color: #28a745 !important;
+        background: transparent !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    /* Skeleton Shimmer */
+    .shimmer-row {
+      height: 18px;
+      background: linear-gradient(90deg, var(--bg3) 25%, var(--surface) 50%, var(--bg3) 75%);
+      background-size: 200% 100%;
+      animation: shimmerLoading 1.5s infinite linear;
+      border-radius: 6px;
+      margin: 8px 0;
+    }
+    @keyframes shimmerLoading {
+      to { background-position: -200% 0; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══ AUTH ═══ -->
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo" style="font-family: 'Plus Jakarta Sans', sans-serif;">Shadow<span>Quant</span></div>
+      <div class="auth-tagline">Fintech Private Limited · Loan Management</div>
+      <div id="authMsg" class="auth-msg"></div>
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="authTab('login')">Sign In</div>
+        <div class="auth-tab" onclick="authTab('register')">Register</div>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="loginForm">
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="lEmail"
+            type="email" placeholder="you@example.com"></div>
+        <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="lPass"
+            type="password" placeholder="••••••••"></div>
+        <button class="form-btn" onclick="doLogin()">Sign In →</button>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="registerForm" style="display:none">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">First Name</label><input class="form-input" id="rFirst"
+              placeholder="Rahul"></div>
+          <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="rLast"
+              placeholder="Sharma"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="rEmail"
+            type="email" placeholder="you@example.com"></div>
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="rPhone"
+            placeholder="9876543210"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Date of Birth</label><input class="form-input" id="rDob"
+              type="date"></div>
+          <div class="form-group"><label class="form-label">PAN Number</label><input class="form-input" id="rPan"
+              placeholder="ABCDE1234F" style="text-transform:uppercase"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="rPass"
+            type="password" placeholder="Min 8 characters"></div>
+        <button class="form-btn" onclick="doRegister()">Create Account →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ APP ═══ -->
+  <div id="appShell" class="app">
+    <aside class="sidebar">
+      <div class="logo-wrap" style="padding: 24px 20px; display: flex; flex-direction: column; gap: 4px;">
+        <div class="logo" style="font-size: 20px; font-weight: 800; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.5px;">Shadow<span style="color: var(--text);">Quant</span></div>
+        <div class="logo-sub" style="font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text3); font-weight: 600; white-space: nowrap;">Fintech Private Limited</div>
+      </div>
+      <nav class="nav">
+        <div class="nav-section">Main</div>
+        <div class="nav-item active" onclick="goto('dashboard')">
+          <div class="nav-icon">⬡</div>Dashboard
+        </div>
+        <div class="nav-item" onclick="goto('loans')">
+          <div class="nav-icon">◈</div>My Loans
+        </div>
+        <div class="nav-item" onclick="goto('apply')">
+          <div class="nav-icon">＋</div>Apply for Loan
+        </div>
+        <div class="nav-item" onclick="goto('payments')">
+          <div class="nav-icon">◎</div>Payments
+        </div>
+        <div class="nav-item" onclick="goto('emi')">
+          <div class="nav-icon">≡</div>EMI Schedule
+        </div>
+        <div class="nav-section" style="margin-top:8px">Account</div>
+        <div class="nav-item" onclick="goto('notifications')">
+          <div class="nav-icon">◉</div>Notifications<span class="nav-badge" id="notifBadge">0</span>
+        </div>
+        <div class="nav-item" onclick="goto('profile')">
+          <div class="nav-icon">○</div>Profile
+        </div>
+        <div class="nav-item" onclick="doLogout()" style="margin-top:4px">
+          <div class="nav-icon">←</div>Sign Out
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-pill">
+          <div class="avatar" id="sAvatar">SQ</div>
+          <div>
+            <div class="user-name" id="sName">User</div>
+            <div class="user-role">Member</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-title" id="topTitle">Dashboard</div>
+        <div class="topbar-right">
+          <div class="live-dot"></div><span class="live-label">API Live</span>
+          <button class="btn btn-ghost" id="themeToggleBtn" onclick="toggleTheme()" style="padding: 6px 12px; font-size: 11px; margin-right: 4px; font-weight: 700;">☀️ Light</button>
+          <button class="btn btn-gold" onclick="goto('apply')">+ New Loan</button>
+        </div>
+      </div>
+      <div class="content">
+
+        <!-- DASHBOARD -->
+        <div class="page active" id="page-dashboard">
+          <div class="page-title">Welcome back, <span id="dashName">—</span> 👋</div>
+          <div class="page-sub">Your financial overview</div>
+          <div class="stats-grid" style="grid-template-columns: 1.5fr 1fr 1fr; gap: 20px; align-items: start; display: grid; margin-bottom: 24px;">
+            <!-- Premium Virtual Card (Left) -->
+            <div class="card-neon-wrap" style="background: linear-gradient(135deg, #0f172a 0%, #1c52ff 70%, #1e3a8a 100%); border-radius: 20px; padding: 24px; color: white; display: flex; flex-direction: column; justify-content: space-between; height: 215px; box-shadow: 0 15px 35px rgba(28, 82, 255, 0.25); border: 1px solid rgba(255,255,255,0.08); position: relative; overflow: hidden;">
+              <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(255,255,255,0.12); filter: blur(30px); border-radius: 50%;"></div>
+              
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; z-index: 1;">
+                <div>
+                  <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; font-weight: 700;">ShadowQuant Elite</div>
+                  <div style="font-size: 15px; font-weight: 700; margin-top: 2px; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: 0.5px;">PLATINUM CREDIT</div>
+                </div>
+                <div id="cardRiskIndicator" style="display: flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 99px; font-size: 9px; font-weight: 700; letter-spacing: 1px; color: #10b981;">
+                  <span id="cardRiskPulse" style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+                  <span id="cardRiskText">SECURE</span>
+                </div>
+              </div>
+              
+              <div style="margin: 10px 0; z-index: 1;">
+                <div style="font-size: 9px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; font-weight: 500;">Active Balance Due</div>
+                <div style="font-size: 28px; font-weight: 800; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.5px; margin-top: 2px;" id="cardOutstanding">₹0.00</div>
+              </div>
+              
+              <div style="display: flex; justify-content: space-between; align-items: flex-end; z-index: 1;">
+                <div>
+                  <div style="font-size: 8px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5;">Card Holder</div>
+                  <div style="font-size: 12px; font-weight: 600;" id="cardHolder">USER NAME</div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 8px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.5;">Credit Utilization</div>
+                  <div style="font-size: 12px; font-weight: 600; font-family: 'JetBrains Mono', monospace;" id="cardUtilization">0%</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic KPIs & Countdown Banner (Right blocks) -->
+            <div style="display: flex; flex-direction: column; gap: 16px; height: 215px; justify-content: space-between;">
+              <div class="stat blue" style="flex: 1; display: flex; flex-direction: column; justify-content: center; margin-bottom: 0;">
+                <div class="stat-label" style="font-size: 10px;">Total Limit</div>
+                <div class="stat-val blue" id="dBorrowed" style="font-size: 22px;">₹0</div>
+                <div class="stat-hint" style="font-size: 11px; margin-top: 2px;">Approved credit</div>
+              </div>
+              <div class="stat green" style="flex: 1; display: flex; flex-direction: column; justify-content: center; margin-bottom: 0;">
+                <div class="stat-label" style="font-size: 10px;">Active Products</div>
+                <div class="stat-val green" id="dActive" style="font-size: 22px;">0</div>
+                <div class="stat-hint" style="font-size: 11px; margin-top: 2px;">Loans in good standing</div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 16px; height: 215px; justify-content: space-between;">
+              <div class="stat red" style="flex: 1; display: flex; flex-direction: column; justify-content: center; margin-bottom: 0;">
+                <div class="stat-label" style="font-size: 10px;">Applications</div>
+                <div class="stat-val red" id="dApps" style="font-size: 22px;">0</div>
+                <div class="stat-hint" style="font-size: 11px; margin-top: 2px;">Submitted requests</div>
+              </div>
+              
+              <!-- Countdown Banner -->
+              <div id="cardCountdownBanner" style="flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r2); padding: 14px 18px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;">
+                <div style="font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); font-weight: 700;">Next Payment Due</div>
+                <div style="font-size: 15px; font-weight: 700; color: var(--gold); margin-top: 4px;" id="countdownDueVal">No payments pending</div>
+                <div style="font-size: 11px; color: var(--text2); margin-top: 2px;" id="countdownSub">All clean</div>
+              </div>
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title">Recent Applications</div><button class="btn btn-ghost" style="font-size:12px"
+                  onclick="goto('loans')">View all</button>
+              </div>
+              <div id="dashApps">
+                <div class="spinner-wrap">
+                  <div class="spinner"></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title">Quick Actions</div>
+              </div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+                <button class="btn btn-gold" style="width:100%;padding:12px" onclick="goto('apply')">🏦 Apply for New
+                  Loan</button>
+                <button class="btn btn-ghost" style="width:100%;padding:12px" onclick="goto('payments')">💰 Make a
+                  Payment</button>
+                <button class="btn btn-ghost" style="width:100%;padding:12px" onclick="goto('emi')">📅 View EMI
+                  Schedule</button>
+                <button class="btn btn-ghost" style="width:100%;padding:12px" onclick="goto('notifications')">🔔 Check
+                  Notifications</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MY LOANS -->
+        <div class="page" id="page-loans">
+          <div class="page-title">My Loans</div>
+          <div class="page-sub">All your loan applications</div>
+          <div class="card">
+            <div id="loansBody">
+              <div class="spinner-wrap">
+                <div class="spinner"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- APPLY -->
+        <div class="page" id="page-apply">
+          <div class="page-title">Apply for a Loan</div>
+          <div class="page-sub">Fill in your loan details</div>
+          <div class="grid2">
+            <div>
+              <div class="card">
+                <div class="card-head">
+                  <div class="card-title">Loan Details</div>
+                </div>
+                <div class="card-body">
+                  <div class="form-group"><label class="form-label">Purpose</label><input class="form-input"
+                      id="apPurpose" placeholder="e.g. Home Renovation, Education, Medical..." oninput="calcEMI()">
+                  </div>
+                  <div class="form-group"><label class="form-label">Amount (₹)</label><input class="form-input"
+                      type="number" id="apAmount" placeholder="e.g. 100000" oninput="calcEMI()"></div>
+                  <div class="form-group">
+                    <label class="form-label">Tenure — <span id="tenureLabel" style="color:var(--gold)">12
+                        months</span></label>
+                    <input type="range" style="width:100%;accent-color:var(--gold);margin:8px 0" id="apTenure" min="3"
+                      max="84" value="12"
+                      oninput="document.getElementById('tenureLabel').textContent=this.value+' months';calcEMI()">
+                    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)"><span>3
+                        mo</span><span>84 mo</span></div>
+                  </div>
+                  <div class="form-group"><label class="form-label">Interest Rate (% p.a.)</label><input
+                      class="form-input" type="number" id="apRate" value="12" step="0.1" oninput="calcEMI()"></div>
+                  <button class="form-btn" onclick="doApply()">Submit Application →</button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="emi-preview">
+                <div class="emi-preview-title">◆ Loan Preview</div>
+                <div class="emi-big">
+                  <div class="emi-big-label">Monthly EMI</div>
+                  <div class="emi-big-val" id="prevEMI">₹0</div>
+                  <div class="emi-big-sub" id="prevEMISub">Enter details to calculate</div>
+                </div>
+                <div class="preview-row"><span class="preview-key">Principal</span><span class="preview-val"
+                    id="prevPrincipal">—</span></div>
+                <div class="preview-row"><span class="preview-key">Total Interest</span><span class="preview-val"
+                    id="prevInterest" style="color:var(--amber)">—</span></div>
+                <div class="preview-row"><span class="preview-key">Total Payable</span><span class="preview-val"
+                    id="prevTotal">—</span></div>
+                <div class="preview-row"><span class="preview-key">Tenure</span><span class="preview-val"
+                    id="prevTenure">—</span></div>
+                <div class="preview-row"><span class="preview-key">Rate p.a.</span><span class="preview-val"
+                    id="prevRate">—</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAYMENTS -->
+        <div class="page" id="page-payments">
+          <div class="page-title">Make a Payment & History</div>
+          <div class="page-sub">Pay your EMI, make a prepayment, and view receipts</div>
+          <div class="grid2">
+            <div>
+              <div class="card">
+                <div class="card-head">
+                  <div class="card-title">Payment Details</div>
+                </div>
+                <div class="card-body">
+                  <div class="form-group"><label class="form-label">Loan ID</label><input class="form-input" type="number"
+                      id="payLoanId" placeholder="Enter your Loan ID" oninput="fetchLoanInfo()"></div>
+                  <div id="payLoanInfo"></div>
+                  <div class="form-group"><label class="form-label">Amount (₹)</label><input class="form-input"
+                      type="number" id="payAmount" placeholder="Enter amount"></div>
+                  <div class="form-group"><label class="form-label">Payment Method</label>
+                    <select class="form-input" id="payMethod">
+                      <option value="UPI">UPI</option>
+                      <option value="NEFT">NEFT</option>
+                      <option value="IMPS">IMPS</option>
+                      <option value="RTGS">RTGS</option>
+                      <option value="CHEQUE">Cheque</option>
+                      <option value="CASH">Cash</option>
+                    </select>
+                  </div>
+                  <div class="form-group"><label class="form-label">Transaction Reference / UTR</label><input
+                      class="form-input" id="payRef" placeholder="e.g. UPI123456789"></div>
+                  <button class="form-btn" onclick="doPayment()">Submit Payment →</button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="card">
+                <div class="card-head">
+                  <div class="card-title">Payment History & Receipts</div>
+                </div>
+                <div id="paymentsHistoryBody">
+                  <div class="spinner-wrap">
+                    <div class="spinner"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EMI -->
+        <div class="page" id="page-emi">
+          <div class="page-title">EMI Schedule</div>
+          <div class="page-sub">Your loan EMI breakdown</div>
+          <div id="emiBody">
+            <div class="spinner-wrap">
+              <div class="spinner"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NOTIFICATIONS -->
+        <div class="page" id="page-notifications">
+          <div class="page-title">Notifications</div>
+          <div class="page-sub">Your alerts and updates</div>
+          <div class="card" style="max-width:680px">
+            <div id="notifBody">
+              <div class="spinner-wrap">
+                <div class="spinner"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROFILE -->
+        <div class="page" id="page-profile">
+          <div class="page-title">My Profile</div>
+          <div class="page-sub">Your account information</div>
+          <div class="card" style="max-width:560px">
+            <div class="card-body" id="profileBody">
+              <div class="spinner-wrap">
+                <div class="spinner"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+
+  <script>
+    // ─── CONFIG ───────────────────────────────────────────────────
+    const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3000/api'
+      : 'https://shadowquant-backend.onrender.com/api';
+    let TOKEN = localStorage.getItem('sq_token');
+    let USER = JSON.parse(localStorage.getItem('sq_user') || 'null');
+    let CURRENT_PAYMENTS = [];
+    let pollingInterval = null;
+
+    // ─── THEME ────────────────────────────────────────────────────
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      setTheme(next);
+    }
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('sq_theme', theme);
+      const btn = document.getElementById('themeToggleBtn');
+      if (btn) {
+        btn.innerHTML = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+      }
+    }
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('sq_theme') || 'dark');
+
+    // ─── INIT ─────────────────────────────────────────────────────
+    window.onload = () => { 
+      TOKEN && USER ? showApp() : showAuth(); 
+      setTheme(localStorage.getItem('sq_theme') || 'dark');
+    };
+
+    function showAuth() {
+      if (pollingInterval) clearInterval(pollingInterval);
+      document.getElementById('authScreen').style.display = 'flex';
+      document.getElementById('appShell').style.display = 'none';
+      const reason = sessionStorage.getItem('logout_reason');
+      if (reason) {
+        showMsg(reason, 'error');
+        sessionStorage.removeItem('logout_reason');
+      }
+    }
+    function showApp() {
+      document.getElementById('authScreen').style.display = 'none';
+      document.getElementById('appShell').style.display = 'block';
+      const name = USER?.first_name || 'User';
+      const initials = ((USER?.first_name || 'S')[0] + (USER?.last_name || 'Q')[0]).toUpperCase();
+      document.getElementById('sAvatar').textContent = initials;
+      document.getElementById('sName').textContent = `${USER?.first_name || ''} ${USER?.last_name || ''}`.trim();
+      document.getElementById('dashName').textContent = name;
+      loadDashboard();
+
+      if (pollingInterval) clearInterval(pollingInterval);
+      pollingInterval = setInterval(silentRefresh, 30000);
+    }
+
+    async function silentRefresh() {
+      const activePage = document.querySelector('.page.active');
+      if (!activePage) return;
+      const pageId = activePage.id;
+      if (pageId === 'page-dashboard') {
+        await loadDashboard(true);
+      } else if (pageId === 'page-loans') {
+        await loadLoans(true);
+      } else if (pageId === 'page-payments') {
+        await loadPaymentHistory(true);
+      } else if (pageId === 'page-emi') {
+        await loadMyEMI(true);
+      } else if (pageId === 'page-notifications') {
+        await loadNotifications(true);
+      }
+    }
+
+    // ─── AUTH TABS ────────────────────────────────────────────────
+    function authTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach((t, i) => t.classList.toggle('active', (tab === 'login' && i === 0) || (tab === 'register' && i === 1)));
+      document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+      document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+      clearMsg();
+    }
+    function clearMsg() { const m = document.getElementById('authMsg'); m.style.display = 'none'; m.textContent = ''; }
+    function showMsg(msg, type) { const m = document.getElementById('authMsg'); m.className = `auth-msg ${type}`; m.textContent = msg; m.style.display = 'block'; }
+
+    // ─── REGISTER ─────────────────────────────────────────────────
+    async function doRegister() {
+      clearMsg();
+      const body = {
+        first_name: document.getElementById('rFirst').value.trim(),
+        last_name: document.getElementById('rLast').value.trim(),
+        email: document.getElementById('rEmail').value.trim(),
+        phone_number: document.getElementById('rPhone').value.trim(),
+        date_of_birth: document.getElementById('rDob').value,
+        pan_number: document.getElementById('rPan').value.trim().toUpperCase(),
+        password: document.getElementById('rPass').value,
+      };
+      if (!body.email || !body.password) return showMsg('Email and password are required', 'error');
+      try {
+        const r = await fetch(`${API}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const d = await r.json();
+        if (!r.ok) return showMsg(d.error || 'Registration failed', 'error');
+        showMsg('Account created! Please sign in.', 'success');
+        authTab('login');
+        document.getElementById('lEmail').value = body.email;
+      } catch { showMsg('Cannot connect to server. Is it running on port 3000?', 'error'); }
+    }
+
+    // ─── LOGIN ────────────────────────────────────────────────────
+    async function doLogin() {
+      clearMsg();
+      const email = document.getElementById('lEmail').value.trim();
+      const password = document.getElementById('lPass').value;
+      if (!email || !password) return showMsg('Email and password required', 'error');
+      try {
+        const r = await fetch(`${API}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+        const d = await r.json();
+        if (!r.ok) return showMsg(d.error || 'Login failed', 'error');
+        TOKEN = d.accessToken;
+        USER = d.user;
+        localStorage.setItem('sq_token', TOKEN);
+        localStorage.setItem('sq_user', JSON.stringify(USER));
+        showApp();
+      } catch { showMsg('Cannot connect to server. Is it running on port 3000?', 'error'); }
+    }
+
+    function doLogout() {
+      if (pollingInterval) clearInterval(pollingInterval);
+      localStorage.clear(); TOKEN = null; USER = null; showAuth();
+    }
+
+    // ─── API HELPER ───────────────────────────────────────────────
+    async function api(path, method = 'GET', body = null) {
+      try {
+        const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN } };
+        if (body) opts.body = JSON.stringify(body);
+        const r = await fetch(API + path, opts);
+        updateConnectionPulse(true);
+        if (r.status === 401) {
+          sessionStorage.setItem('logout_reason', 'Session expired. Please sign in again.');
+          doLogout();
+          return null;
+        }
+        const d = await r.json();
+        return { ok: r.ok, data: d };
+      } catch (err) {
+        updateConnectionPulse(false);
+        return null;
+      }
+    }
+
+    // ─── NAVIGATION ───────────────────────────────────────────────
+    const PAGE_TITLES = { dashboard: 'Dashboard', loans: 'My Loans', apply: 'Apply for Loan', payments: 'Payments', emi: 'EMI Schedule', notifications: 'Notifications', profile: 'Profile' };
+    function goto(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      document.getElementById('topTitle').textContent = PAGE_TITLES[page] || page;
+      const idx = { dashboard: 0, loans: 1, apply: 2, payments: 3, emi: 4, notifications: 5, profile: 6 };
+      const items = document.querySelectorAll('.nav-item');
+      if (idx[page] !== undefined) items[idx[page]].classList.add('active');
+      if (page === 'loans') loadLoans();
+      if (page === 'payments') loadPaymentHistory();
+      if (page === 'emi') loadMyEMI();
+      if (page === 'notifications') loadNotifications();
+      if (page === 'profile') loadProfile();
+    }
+
+    // ─── DASHBOARD ────────────────────────────────────────────────
+    // ─── DASHBOARD ────────────────────────────────────────────────
+    async function loadDashboard(silent = false) {
+      if (!silent) {
+        const el = document.getElementById('dashApps');
+        if (el) el.innerHTML = getSkeletonLoader(3);
+      }
+      const [appsRes, loansRes] = await Promise.all([api('/loan-applications'), api('/loans')]);
+
+      let totalBorrowed = 0, activeCount = 0, outstanding = 0;
+      let oldestPendingEmiDueDate = null;
+      let nextEMIAmount = 0;
+
+      let dueLoanId = null;
+      if (loansRes?.ok) {
+        const activeLoans = (loansRes.data.loans || []).filter(l => l.status === 'ACTIVE');
+        activeCount = activeLoans.length;
+        
+        for (const loan of activeLoans) {
+          totalBorrowed += parseFloat(loan.principal_amount || 0);
+          outstanding += parseFloat(loan.outstanding_principal || 0);
+          
+          const rEmi = await api('/loans/' + loan.id + '/emi-schedule');
+          if (rEmi?.ok) {
+            const nextPending = (rEmi.data.schedule || []).find(e => e.status === 'PENDING');
+            if (nextPending) {
+              const dDate = new Date(nextPending.due_date);
+              if (!oldestPendingEmiDueDate || dDate < oldestPendingEmiDueDate) {
+                oldestPendingEmiDueDate = dDate;
+                nextEMIAmount = parseFloat(nextPending.emi_amount || 0);
+                dueLoanId = loan.id;
+              }
+            }
+          }
+        }
+      }
+
+      // Populate limit and products
+      document.getElementById('dBorrowed').textContent = '₹' + totalBorrowed.toLocaleString('en-IN');
+      document.getElementById('dActive').textContent = activeCount;
+      document.getElementById('cardOutstanding').textContent = '₹' + outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+      // Populate applications
+      const apps = appsRes?.data?.applications || [];
+      document.getElementById('dApps').textContent = apps.length;
+
+      // Card Holder Name
+      const holderName = `${USER?.first_name || 'User'} ${USER?.last_name || ''}`.trim().toUpperCase();
+      document.getElementById('cardHolder').textContent = holderName || 'PLATINUM MEMBER';
+
+      // Credit Utilization
+      const utilization = totalBorrowed > 0 ? Math.round((outstanding / totalBorrowed) * 100) : 0;
+      document.getElementById('cardUtilization').textContent = utilization + '%';
+
+      // Due Date Countdown Banner
+      const countdownBanner = document.getElementById('cardCountdownBanner');
+      const riskIndicator = document.getElementById('cardRiskIndicator');
+      const riskPulse = document.getElementById('cardRiskPulse');
+      const riskText = document.getElementById('cardRiskText');
+
+      let currentRisk = 'SECURE';
+      let riskColor = '#10b981';
+      let riskBg = 'rgba(16, 185, 129, 0.15)';
+      let riskBorder = 'rgba(16, 185, 129, 0.3)';
+
+      if (oldestPendingEmiDueDate) {
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const due = new Date(oldestPendingEmiDueDate);
+        due.setHours(0,0,0,0);
+        
+        const timeDiff = due - today;
+        const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+        let dueValText = '';
+        let dueColor = 'var(--gold)';
+        let dueSubText = '';
+
+        if (daysDiff < 0) {
+          currentRisk = 'OVERDUE';
+          riskColor = '#ef4444';
+          riskBg = 'rgba(239, 68, 68, 0.15)';
+          riskBorder = 'rgba(239, 68, 68, 0.3)';
+          
+          dueValText = `Overdue by ${Math.abs(daysDiff)} Day${Math.abs(daysDiff) > 1 ? 's' : ''}! ⚠️`;
+          dueColor = 'var(--red)';
+          dueSubText = `Pay ₹${nextEMIAmount.toLocaleString('en-IN')} immediately`;
+        } else if (daysDiff === 0) {
+          currentRisk = 'DUE TODAY';
+          riskColor = '#f59e0b';
+          riskBg = 'rgba(245, 158, 11, 0.15)';
+          riskBorder = 'rgba(245, 158, 11, 0.3)';
+          
+          dueValText = 'PAYMENT DUE TODAY!';
+          dueColor = 'var(--amber)';
+          dueSubText = `Amount: ₹${nextEMIAmount.toLocaleString('en-IN')}`;
+        } else {
+          dueValText = `In ${daysDiff} Day${daysDiff > 1 ? 's' : ''}`;
+          dueColor = 'var(--gold)';
+          dueSubText = `₹${nextEMIAmount.toLocaleString('en-IN')} on ${fmtDate(oldestPendingEmiDueDate)}`;
+          
+          if (daysDiff <= 3) {
+            currentRisk = 'WARNING';
+            riskColor = '#f59e0b';
+            riskBg = 'rgba(245, 158, 11, 0.15)';
+            riskBorder = 'rgba(245, 158, 11, 0.3)';
+          }
+        }
+        
+        countdownBanner.innerHTML = `
+          <div style="font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); font-weight: 700;">Next Payment Due</div>
+          <div style="font-size: 15px; font-weight: 700; color: ${dueColor}; margin-top: 4px;">${dueValText}</div>
+          <div style="font-size: 11px; color: var(--text2); margin-top: 2px;">${dueSubText}</div>
+          <button class="btn btn-gold" style="margin-top: 8px; width: 100%; padding: 7px; font-size: 11px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif;" onclick="quickPayLoan(${dueLoanId}, ${nextEMIAmount})">Pay Now →</button>
+        `;
+      } else {
+        countdownBanner.innerHTML = `
+          <div style="font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); font-weight: 700;">Next Payment Due</div>
+          <div style="font-size: 15px; font-weight: 700; color: var(--green); margin-top: 4px;">No Payments Pending</div>
+          <div style="font-size: 11px; color: var(--text2); margin-top: 2px;">All clean and synchronized</div>
+        `;
+      }
+
+      // Update Risk Badge
+      riskText.textContent = currentRisk;
+      riskIndicator.style.color = riskColor;
+      riskIndicator.style.backgroundColor = riskBg;
+      riskIndicator.style.borderColor = riskBorder;
+      riskPulse.style.backgroundColor = riskColor;
+
+      const el = document.getElementById('dashApps');
+      if (!apps.length) {
+        el.innerHTML = `<div class="empty"><div class="empty-icon">◈</div><div class="empty-title">No applications yet</div><div class="empty-sub">Apply for your first loan to get started</div></div>`;
+        return;
+      }
+      el.innerHTML = `<table class="tbl"><thead><tr><th>ID</th><th>Purpose</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+    ${apps.slice(0, 5).map(a => `<tr>
+      <td><span style="font-family:'DM Mono',monospace;color:var(--gold)">#${a.id}</span></td>
+      <td>${a.purpose || '—'}</td>
+      <td style="font-family:'DM Mono',monospace">₹${parseFloat(a.requested_amount).toLocaleString('en-IN')}</td>
+      <td>${badge(a.status)}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+    }
+
+    // ─── LOANS ────────────────────────────────────────────────────
+    async function loadLoans(silent = false) {
+      const el = document.getElementById('loansBody');
+      if (!silent) el.innerHTML = getSkeletonLoader(4);
+      const r = await api('/loan-applications');
+      if (!r?.ok) { el.innerHTML = `<div class="empty"><div class="empty-title">Failed to load</div></div>`; return; }
+      const apps = r.data.applications || [];
+      if (!apps.length) {
+        el.innerHTML = `<div class="empty"><div class="empty-icon">◈</div><div class="empty-title">No loan applications</div><div class="empty-sub">You haven't applied for any loans yet</div><br><button class="btn btn-gold" onclick="goto('apply')">Apply Now</button></div>`;
+        return;
+      }
+      el.innerHTML = `<table class="tbl"><thead><tr><th>ID</th><th>Purpose</th><th>Amount</th><th>Tenure</th><th>Rate</th><th>Status</th><th>Applied On</th></tr></thead><tbody>
+    ${apps.map(a => `<tr>
+      <td><span style="font-family:'DM Mono',monospace;color:var(--gold)">#${a.id}</span></td>
+      <td>${a.purpose || '—'}</td>
+      <td style="font-family:'DM Mono',monospace">₹${parseFloat(a.requested_amount).toLocaleString('en-IN')}</td>
+      <td>${a.tenure_months} mo</td>
+      <td>${a.interest_rate || '—'}%</td>
+      <td>${badge(a.status)}</td>
+      <td style="font-size:12px;color:var(--text3)">${fmtDate(a.created_at)}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+    }
+
+    // ─── APPLY ────────────────────────────────────────────────────
+    function calcEMI() {
+      const P = parseFloat(document.getElementById('apAmount').value) || 0;
+      const r = (parseFloat(document.getElementById('apRate').value) || 12) / 100 / 12;
+      const n = parseInt(document.getElementById('apTenure').value) || 12;
+      let emi = 0, interest = 0;
+      if (P > 0 && r > 0 && n > 0) { emi = P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1); interest = emi * n - P; }
+      document.getElementById('prevEMI').textContent = '₹' + Math.round(emi).toLocaleString('en-IN');
+      document.getElementById('prevEMISub').textContent = `For ${n} months`;
+      document.getElementById('prevPrincipal').textContent = '₹' + P.toLocaleString('en-IN');
+      document.getElementById('prevInterest').textContent = '₹' + Math.round(interest).toLocaleString('en-IN');
+      document.getElementById('prevTotal').textContent = '₹' + Math.round(P + interest).toLocaleString('en-IN');
+      document.getElementById('prevTenure').textContent = n + ' months';
+      document.getElementById('prevRate').textContent = (parseFloat(document.getElementById('apRate').value) || 0) + '%';
+    }
+
+    async function doApply() {
+      const body = {
+        purpose: document.getElementById('apPurpose').value.trim(),
+        requested_amount: parseFloat(document.getElementById('apAmount').value),
+        tenure_months: parseInt(document.getElementById('apTenure').value),
+        interest_rate: parseFloat(document.getElementById('apRate').value),
+      };
+      if (!body.purpose || !body.requested_amount) return toast('Please fill all fields', 'error');
+      const r = await api('/loan-applications', 'POST', body);
+      if (r?.ok) { toast('Loan application submitted! 🎉', 'success'); goto('loans'); }
+      else toast(r?.data?.error || 'Submission failed', 'error');
+    }
+
+    // ─── PAYMENT ──────────────────────────────────────────────────
+    async function fetchLoanInfo() {
+      const id = document.getElementById('payLoanId').value;
+      const el = document.getElementById('payLoanInfo');
+      if (!id) { el.innerHTML = ''; return; }
+      const r = await api('/loans/' + id);
+      if (r?.ok && r.data?.loan) {
+        const l = r.data.loan;
+        el.innerHTML = `<div class="pay-info">
+      <div class="pay-id">LOAN #${l.id}</div>
+      <div class="pay-name">${l.purpose || 'Personal Loan'}</div>
+      <div class="pay-meta">
+        <div class="pay-meta-item">Outstanding<span class="pay-meta-val">₹${parseFloat(l.outstanding_principal || 0).toLocaleString('en-IN')}</span></div>
+        <div class="pay-meta-item">Status<span class="pay-meta-val">${badge(l.status)}</span></div>
+        <div class="pay-meta-item">Rate<span class="pay-meta-val">${l.interest_rate}%</span></div>
+      </div>
+    </div>`;
+      } else el.innerHTML = '';
+    }
+
+    async function doPayment() {
+      const loanId = document.getElementById('payLoanId').value;
+      const amount = parseFloat(document.getElementById('payAmount').value);
+      const method = document.getElementById('payMethod').value;
+      const ref = document.getElementById('payRef').value.trim();
+      if (!loanId || !amount || !ref) return toast('Please fill all fields', 'error');
+      const r = await api('/loans/' + loanId + '/payments', 'POST', { amount, payment_method: method, transaction_reference: ref });
+      if (r?.ok) {
+        toast('Payment recorded successfully! ✓', 'success');
+        document.getElementById('payLoanInfo').innerHTML = '';
+        document.getElementById('payAmount').value = '';
+        document.getElementById('payRef').value = '';
+        loadPaymentHistory();
+      } else toast(r?.data?.error || 'Payment failed', 'error');
+    }
+
+    // ─── EMI ──────────────────────────────────────────────────────
+    async function loadMyEMI(silent = false) {
+      const el = document.getElementById('emiBody');
+      if (!silent) el.innerHTML = getSkeletonLoader(6);
+      const r = await api('/loans');
+      const loans = r?.data?.loans || [];
+      if (!loans.length) {
+        el.innerHTML = `<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">No active loans</div><div class="empty-sub">Apply for a loan first</div></div>`;
+        return;
+      }
+      // Load EMI for first active loan automatically
+      const loan = loans.find(l => l.status === 'ACTIVE') || loans[0];
+      const r2 = await api('/loans/' + loan.id + '/emi-schedule');
+      if (!r2?.ok) { el.innerHTML = `<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">No EMI schedule found</div><div class="empty-sub">Your loan may not have been disbursed yet</div></div>`; return; }
+      const emis = r2.data.schedule || [];
+      if (!emis.length) { el.innerHTML = `<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">No EMI schedule found</div><div class="empty-sub">Your loan may not have been disbursed yet</div></div>`; return; }
+      const paid = emis.filter(e => e.status === 'PAID').length;
+      const total = emis.reduce((s, e) => s + parseFloat(e.emi_amount || 0), 0);
+      el.innerHTML = `
+    <div style="margin-bottom:16px;padding:12px 16px;background:var(--bg3);border:1px solid var(--gold-dim);border-radius:var(--r);display:flex;align-items:center;gap:10px">
+      <span style="font-size:14px;color:var(--text3)">Showing schedule for</span>
+      <span style="font-family:'DM Mono',monospace;color:var(--gold);font-weight:600">Loan #${loan.id}</span>
+      <span style="font-size:13px;color:var(--text2)">${loan.purpose || 'Personal Loan'}</span>
+    </div>
+    <div class="stats-grid" style="margin-bottom:20px">
+      <div class="stat gold"><div class="stat-label">Total EMIs</div><div class="stat-val gold">${emis.length}</div></div>
+      <div class="stat green"><div class="stat-label">Paid</div><div class="stat-val green">${paid}</div></div>
+      <div class="stat blue"><div class="stat-label">Remaining</div><div class="stat-val blue">${emis.length - paid}</div></div>
+      <div class="stat red"><div class="stat-label">Total Amount</div><div class="stat-val red" style="font-size:18px">₹${Math.round(total).toLocaleString('en-IN')}</div></div>
+    </div>
+    <div class="card">
+      <table class="tbl">
+        <thead><tr><th>#</th><th>Due Date</th><th>EMI</th><th>Principal</th><th>Interest</th><th>Remaining Balance</th><th>Status</th></tr></thead>
+        <tbody>${emis.map(e => `<tr>
+          <td style="font-family:'DM Mono',monospace;color:var(--text3)">${e.installment_number}</td>
+          <td>${fmtDate(e.due_date)}</td>
+          <td style="font-family:'DM Mono',monospace">₹${parseFloat(e.emi_amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+          <td style="font-family:'DM Mono',monospace;color:var(--blue)">₹${parseFloat(e.principal_component || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+          <td style="font-family:'DM Mono',monospace;color:var(--amber)">₹${parseFloat(e.interest_component || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+          <td style="font-family:'DM Mono',monospace;color:var(--text2)">₹${parseFloat(e.balance_after || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+          <td>${badge(e.status)}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+    }
+
+    // ─── NOTIFICATIONS ────────────────────────────────────────────
+    async function loadNotifications(silent = false) {
+      const el = document.getElementById('notifBody');
+      if (!silent) el.innerHTML = getSkeletonLoader(4);
+      const r = await api('/notifications');
+      if (!r?.ok || !r.data?.notifications?.length) {
+        el.innerHTML = `<div class="empty"><div class="empty-icon">◉</div><div class="empty-title">All caught up!</div><div class="empty-sub">No notifications at the moment.</div></div>`;
+        return;
+      }
+      const icons = { PAYMENT: '💰', EMI_REMINDER: '📅', OVERDUE: '⚠️', LOAN_APPROVED: '✅', LOAN_REJECTED: '❌' };
+      const unread = r.data.notifications.filter(n => !n.is_read).length;
+      const badge2 = document.getElementById('notifBadge');
+      badge2.style.display = unread ? 'inline' : 'none';
+      badge2.textContent = unread;
+      el.innerHTML = r.data.notifications.map(n => `
+    <div class="notif-item ${n.is_read ? '' : 'unread'}">
+      <div class="notif-icon">${icons[n.type] || '🔔'}</div>
+      <div>
+        <div class="notif-type">${(n.type || '').replace(/_/g, ' ')}</div>
+        <div class="notif-msg">${n.message || ''}</div>
+        <div class="notif-time">${fmtDate(n.created_at)}</div>
+      </div>
+    </div>`).join('');
+    }
+
+    // ─── PROFILE ──────────────────────────────────────────────────
+    async function loadProfile(silent = false) {
+      const el = document.getElementById('profileBody');
+      if (!silent) el.innerHTML = getSkeletonLoader(5);
+      const r = await api('/auth/me');
+      const u = r?.data?.user || USER;
+      if (!u) { el.innerHTML = '<div class="empty"><div class="empty-title">Failed to load profile</div></div>'; return; }
+      const initials = ((u.first_name || 'S')[0] + (u.last_name || 'Q')[0]).toUpperCase();
+      el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="profile-avatar">${initials}</div>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700">${u.first_name || ''} ${u.last_name || ''}</div>
+        <div style="font-size:13px;color:var(--text3)">${u.email}</div>
+      </div>
+    </div>
+    <div class="profile-grid">
+      ${[['Phone', maskPhone(u.phone_number)], ['PAN', maskPAN(u.pan_number)], ['Date of Birth', fmtDate(u.date_of_birth)], ['Account ID', '#' + u.id], ['Status', u.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-red">Inactive</span>'], ['Verified', u.is_verified ? '<span class="badge badge-green">Yes</span>' : '<span class="badge badge-amber">Pending</span>']].map(([k, v]) => `
+        <div class="profile-field">
+          <div class="profile-field-label">${k}</div>
+          <div class="profile-field-val">${v}</div>
+        </div>`).join('')}
+    </div>`;
+    }
+
+    // ─── HELPERS ──────────────────────────────────────────────────
+    function getSkeletonLoader(rows = 4) {
+      let html = '<div style="padding: 16px; display:flex; flex-direction:column; gap:8px;">';
+      for (let i = 0; i < rows; i++) {
+        html += `<div class="shimmer-row" style="width: ${100 - (i * 8)}%"></div>`;
+      }
+      html += '</div>';
+      return html;
+    }
+
+    function updateConnectionPulse(isOnline) {
+      const dot = document.querySelector('.live-dot');
+      const lbl = document.querySelector('.live-label');
+      if (dot && lbl) {
+        if (isOnline) {
+          dot.style.backgroundColor = 'var(--green)';
+          dot.style.boxShadow = '0 0 8px var(--green)';
+          lbl.textContent = 'API Connected';
+          lbl.style.color = 'var(--text2)';
+        } else {
+          dot.style.backgroundColor = 'var(--red)';
+          dot.style.boxShadow = '0 0 8px var(--red)';
+          lbl.textContent = 'API Reconnecting...';
+          lbl.style.color = 'var(--red)';
+        }
+      }
+    }
+
+    function badge(s) {
+      const map = { APPLIED: 'badge-blue', UNDER_REVIEW: 'badge-amber', APPROVED: 'badge-gold', ACTIVE: 'badge-green', CLOSED: 'badge-gray', DEFAULTED: 'badge-red', REJECTED: 'badge-red', FORECLOSED: 'badge-gray', PENDING: 'badge-blue', PAID: 'badge-green', PARTIALLY_PAID: 'badge-amber', OVERDUE: 'badge-red', WAIVED: 'badge-gray' };
+      return `<span class="badge ${map[s] || 'badge-gray'}">${s || '—'}</span>`;
+    }
+    function fmtDate(d) {
+      if (!d) return '—';
+      try { return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); } catch { return '—'; }
+    }
+    function maskPhone(p) { return p ? p.replace(/(\+\d{2})?(\d{2})\d{4}(\d{4})/, '$1 $2******$3') : '—'; }
+    function maskPAN(pan) { return pan ? pan.replace(/^(\w{3})\w{3}(\w{4})$/, '$1***$2') : '—'; }
+    function toast(msg, type = 'info') {
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `<span>${type === 'success' ? '✓' : type === 'error' ? '⚠' : 'ℹ'}</span>${msg}`;
+      document.getElementById('toasts').appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+
+    // ─── PAYMENTS HISTORY & RECEIPTS ──────────────────────────────
+    let searchDebounceTimeout = null;
+    let paymentSearchQuery = '';
+    let currentPaymentsPage = 1;
+    const PAYMENTS_PER_PAGE = 5;
+
+    async function loadPaymentHistory(silent = false) {
+      const el = document.getElementById('paymentsHistoryBody');
+      if (!silent) el.innerHTML = getSkeletonLoader(4);
+      const r = await api('/payments');
+      if (!r?.ok) {
+        el.innerHTML = `<div class="empty"><div class="empty-title">Failed to load payment history</div></div>`;
+        return;
+      }
+      const payments = r.data.payments || [];
+      if (!payments.length) {
+        el.innerHTML = `<div class="empty"><div class="empty-icon">💰</div><div class="empty-title">No payments recorded</div><div class="empty-sub">Your payment history will appear here.</div></div>`;
+        return;
+      }
+      
+      CURRENT_PAYMENTS = payments;
+      renderPaymentsLedger();
+    }
+
+    function debounceSearchPayments(val) {
+      clearTimeout(searchDebounceTimeout);
+      searchDebounceTimeout = setTimeout(() => {
+        paymentSearchQuery = val.trim().toLowerCase();
+        currentPaymentsPage = 1; // reset page
+        renderPaymentsLedger();
+      }, 250);
+    }
+
+    function renderPaymentsLedger() {
+      const el = document.getElementById('paymentsHistoryBody');
+      
+      // Filter based on search query
+      const filtered = CURRENT_PAYMENTS.filter(p => 
+        p.transaction_reference.toLowerCase().includes(paymentSearchQuery) || 
+        String(p.loan_id).includes(paymentSearchQuery) ||
+        p.payment_mode.toLowerCase().includes(paymentSearchQuery)
+      );
+
+      if (!filtered.length) {
+        el.innerHTML = `
+          <input type="text" id="paySearchInput" placeholder="Search by UTR or Loan ID..." value="${paymentSearchQuery}" oninput="debounceSearchPayments(this.value)" class="form-input" style="margin-bottom:12px; font-size:12px; padding:8px 12px;" />
+          <div class="empty"><div class="empty-title">No transactions match your search</div></div>
+        `;
+        return;
+      }
+
+      // Calculate pagination bounds
+      const totalItems = filtered.length;
+      const totalPages = Math.ceil(totalItems / PAYMENTS_PER_PAGE);
+      if (currentPaymentsPage > totalPages) currentPaymentsPage = totalPages;
+      if (currentPaymentsPage < 1) currentPaymentsPage = 1;
+
+      const startIndex = (currentPaymentsPage - 1) * PAYMENTS_PER_PAGE;
+      const endIndex = Math.min(startIndex + PAYMENTS_PER_PAGE, totalItems);
+      const pageItems = filtered.slice(startIndex, endIndex);
+
+      el.innerHTML = `
+        <input type="text" id="paySearchInput" placeholder="Search by UTR or Loan ID..." value="${paymentSearchQuery}" oninput="debounceSearchPayments(this.value)" class="form-input" style="margin-bottom:12px; font-size:12px; padding:8px 12px;" />
+        
+        <div style="min-height: 230px;"><table class="tbl">
+          <thead><tr><th>UTR / Ref</th><th>Loan</th><th>Amount</th><th>Method</th><th>Date</th><th>Action</th></tr></thead>
+          <tbody>${pageItems.map(p => {
+            const origIndex = CURRENT_PAYMENTS.findIndex(orig => orig.id === p.id);
+            return `<tr>
+              <td><span style="font-family:'DM Mono',monospace;color:var(--gold)">${p.transaction_reference}</span></td>
+              <td style="font-family:'DM Mono',monospace">#${p.loan_id}</td>
+              <td style="font-family:'DM Mono',monospace;font-weight:600">₹${parseFloat(p.amount_paid).toLocaleString('en-IN')}</td>
+              <td><span class="badge badge-gray">${p.payment_mode}</span></td>
+              <td style="font-size:11px;color:var(--text3)">${fmtDate(p.payment_date)}</td>
+              <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="showReceiptByIndex(${origIndex})">Receipt</button></td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table></div>
+        
+        <!-- Pagination controls -->
+        <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:12px; border-top:1px solid var(--border)">
+          <div style="font-size:11px; color:var(--text3)">Showing ${startIndex + 1}-${endIndex} of ${totalItems}</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button class="btn btn-ghost" style="padding:4px 10px; font-size:11px" ${currentPaymentsPage === 1 ? 'disabled style="opacity:0.4; cursor:not-allowed"' : ''} onclick="prevPaymentsPage()">Prev</button>
+            <span style="font-size:11px; color:var(--text2)">Page ${currentPaymentsPage} of ${totalPages}</span>
+            <button class="btn btn-ghost" style="padding:4px 10px; font-size:11px" ${currentPaymentsPage === totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed"' : ''} onclick="nextPaymentsPage()">Next</button>
+          </div>
+        </div>
+      `;
+
+      // Refocus search input safely
+      const inp = document.getElementById('paySearchInput');
+      if (inp) {
+        inp.focus();
+        inp.selectionStart = inp.selectionEnd = inp.value.length;
+      }
+    }
+
+    function prevPaymentsPage() {
+      if (currentPaymentsPage > 1) {
+        currentPaymentsPage--;
+        renderPaymentsLedger();
+      }
+    }
+
+    function nextPaymentsPage() {
+      const filteredCount = CURRENT_PAYMENTS.filter(p => 
+        p.transaction_reference.toLowerCase().includes(paymentSearchQuery) || 
+        String(p.loan_id).includes(paymentSearchQuery) ||
+        p.payment_mode.toLowerCase().includes(paymentSearchQuery)
+      ).length;
+      const maxPages = Math.ceil(filteredCount / PAYMENTS_PER_PAGE);
+      if (currentPaymentsPage < maxPages) {
+        currentPaymentsPage++;
+        renderPaymentsLedger();
+      }
+    }
+
+    function showReceiptByIndex(index) {
+      const p = CURRENT_PAYMENTS[index];
+      if (!p) return;
+      
+      const words = numToWords(parseFloat(p.amount_paid));
+      const customerName = `${USER?.first_name || 'Valued'} ${USER?.last_name || 'Customer'}`.trim().toUpperCase();
+      const customerEmail = USER?.email || 'customer@shadowquant.com';
+      const customerPhone = maskPhone(USER?.phone_number);
+      const customerPAN = maskPAN(USER?.pan_number);
+      
+      const el = document.getElementById('receiptModalContent');
+      el.innerHTML = `
+        <div class="receipt-header-row">
+          <div>
+            <div class="receipt-corp-title">Shadow<span>Quant</span></div>
+            <div class="receipt-corp-meta">
+              <strong>ShadowQuant Fintech Private Limited</strong><br>
+              Registered NBFC Lending Platform · RBI Audited<br>
+              CIN: U65999DL2026PTC394860 · GSTIN: 07AAAAC9847F1Z3<br>
+              Corporate Office: Level 5, Horizon Center, Aerocity, New Delhi, India<br>
+              Support: support@shadowquant.com · www.shadowquant.com
+            </div>
+          </div>
+          <div class="receipt-meta-block">
+            <div class="receipt-meta-title">RECEIPT</div>
+            <div class="receipt-meta-item"><span>Receipt No:</span> #REC-${p.id}</div>
+            <div class="receipt-meta-item"><span>Date:</span> ${new Date(p.payment_date).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+            <div class="receipt-meta-item"><span>Payment Status:</span> <strong style="color:var(--green)">SUCCESS</strong></div>
+          </div>
+        </div>
+        
+        <div class="receipt-payer-grid">
+          <div>
+            <div class="receipt-payer-title">Received From (Borrower)</div>
+            <div class="receipt-payer-info">
+              <strong>${customerName}</strong><br>
+              Email: ${customerEmail}<br>
+              Phone: ${customerPhone}<br>
+              PAN: ${customerPAN}
+            </div>
+          </div>
+          <div>
+            <div class="receipt-payer-title">Payment Institution</div>
+            <div class="receipt-payer-info">
+              <strong>ShadowQuant Treasury Systems</strong><br>
+              Payment Mode: ${p.payment_mode}<br>
+              Reference UTR: ${p.transaction_reference}<br>
+              Nodal Bank: ShadowQuant Reserve Nodal
+            </div>
+          </div>
+        </div>
+        
+        <table class="receipt-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Transaction Reference / UTR</th>
+              <th style="text-align: right;">Payment Mode</th>
+              <th style="text-align: right;">Amount Paid</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight: 500;">
+                EMI Installment Repayment<br>
+                <span style="font-size: 11px; color: var(--text3); font-weight: normal;">Accounted toward Loan Account ID: #${p.loan_id}</span>
+              </td>
+              <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--gold);">${p.transaction_reference}</td>
+              <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">${p.payment_mode}</td>
+              <td style="text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600;">₹${parseFloat(p.amount_paid).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="receipt-summary-box">
+          <div class="receipt-summary-row">
+            <span>Subtotal</span>
+            <span style="font-family: 'JetBrains Mono', monospace;">₹${parseFloat(p.amount_paid).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          </div>
+          <div class="receipt-summary-row">
+            <span>Taxes & GST (0%)</span>
+            <span style="font-family: 'JetBrains Mono', monospace;">₹0.00</span>
+          </div>
+          <div class="receipt-summary-row">
+            <span>Convenience Nodal Fee</span>
+            <span style="font-family: 'JetBrains Mono', monospace;">₹0.00</span>
+          </div>
+          <div class="receipt-summary-row total">
+            <span>Total Paid</span>
+            <span style="font-family: 'JetBrains Mono', monospace;">₹${parseFloat(p.amount_paid).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          </div>
+        </div>
+        
+        <div class="receipt-words" style="margin-bottom: 28px;">
+          Amount in Words: <em>Rupees ${words}</em>
+        </div>
+        
+        <div class="receipt-footer-seal-block">
+          <div class="receipt-seal-text">
+            <strong>ShadowQuant Digital Ledger Certification</strong><br>
+            This is an electronically generated transaction receipt processed through a secured RBI-compliant nodal pipeline. No physical signature is required. All payments are subject to auditing logs.
+          </div>
+          <div class="receipt-badge-certified">
+            <span class="receipt-badge-certified-dot"></span>
+            ✓ LEDGER AUDITED
+          </div>
+        </div>
+        
+        <div class="receipt-actions no-print" style="margin-top:32px; border-top: 1px solid var(--border); padding-top: 20px;">
+          <button class="btn btn-gold" onclick="window.print()">Print / Save PDF</button>
+          <button class="btn btn-ghost" onclick="closeReceipt()">Close</button>
+        </div>
+      `;
+      
+      document.getElementById('receiptModal').style.display = 'flex';
+    }
+
+    function closeReceipt() {
+      document.getElementById('receiptModal').style.display = 'none';
+    }
+
+    function numToWords(num) {
+      const a = ['','One ','Two ','Three ','Four ','Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+      const b = ['', '', 'Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+      
+      function g(n) {
+        if (n < 20) return a[n];
+        const digit = n % 10;
+        return b[Math.floor(n / 10)] + (digit ? '-' + a[digit] : ' ');
+      }
+      function h(n) {
+        if (n >= 100) return a[Math.floor(n / 100)] + 'Hundred ' + g(n % 100);
+        return g(n);
+      }
+      
+      let str = '';
+      let n = Math.floor(num);
+      let paise = Math.round((num - n) * 100);
+      
+      if (n === 0) return 'Zero Rupees Only';
+      
+      // Crores
+      if (n >= 10000000) {
+        str += h(Math.floor(n / 10000000)) + 'Crore ';
+        n %= 10000000;
+      }
+      // Lakhs
+      if (n >= 100000) {
+        str += h(Math.floor(n / 100000)) + 'Lakh ';
+        n %= 100000;
+      }
+      // Thousands
+      if (n >= 1000) {
+        str += h(Math.floor(n / 1000)) + 'Thousand ';
+        n %= 1000;
+      }
+      // Hundreds/Tens/Ones
+      if (n > 0) {
+        str += h(n);
+      }
+      
+      str += 'Rupees ';
+      if (paise > 0) {
+        str += 'and ' + h(paise) + 'Paise ';
+      }
+      str += 'Only';
+      return str.replace(/\s+/g, ' ').trim();
+    }
+
+    function quickPayLoan(loanId, amount) {
+      goto('payments');
+      const payLoanId = document.getElementById('payLoanId');
+      const payAmount = document.getElementById('payAmount');
+      if (payLoanId && payAmount) {
+        payLoanId.value = loanId;
+        payAmount.value = Math.round(amount);
+        fetchLoanInfo();
+      }
+    }
+  </script>
+
+  <!-- RECEIPT MODAL OVERLAY -->
+  <div id="receiptModal" class="receipt-modal-overlay" onclick="closeReceipt()">
+    <div class="receipt-card" onclick="event.stopPropagation()">
+      <div id="receiptModalContent"></div>
+    </div>
+  </div>
+</body>
+
+</html>

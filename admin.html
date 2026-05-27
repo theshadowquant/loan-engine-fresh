@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShadowQuant — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#1c52ff;--gold2:#4b73ff;
+  --green:#10b981;--green-dim:rgba(16, 185, 129, 0.1);
+  --red:#ef4444;--red-dim:rgba(239, 68, 68, 0.1);
+  --blue:#3b82f6;--blue-dim:rgba(59, 130, 246, 0.1);
+  --amber:#f59e0b;--amber-dim:rgba(245, 158, 11, 0.1);
+  --r:12px;--r2:20px;
+}
+:root, :root[data-theme="dark"]{
+  --bg:#0b0f19;--bg2:#111827;--bg3:#1f2937;--surface:#374151;--surface2:#4b5563;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.08);
+  --text:#f9fafb;--text2:#9ca3af;--text3:#6b7280;
+  --gold-dim:rgba(28, 82, 255, 0.1);
+}
+:root[data-theme="light"] {
+  --bg: #f8fafc;
+  --bg2: #ffffff;
+  --bg3: #f1f5f9;
+  --surface: #e2e8f0;
+  --surface2: #cbd5e1;
+  --border: rgba(0, 0, 0, 0.04);
+  --border2: rgba(0, 0, 0, 0.06);
+  --text: #0f172a;
+  --text2: #475569;
+  --text3: #64748b;
+  --gold-dim: rgba(28, 82, 255, 0.06);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* AUTH */
+.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.auth-card{width:100%;max-width:400px;background:var(--bg2);border:1px solid var(--border2);border-radius:24px;padding:44px}
+.auth-logo{font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:800;color:var(--gold);margin-bottom:2px}
+.auth-logo span{color:var(--text)}
+.auth-sub{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:32px}
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:11px;color:var(--text3);letter-spacing:.5px;margin-bottom:5px}
+.form-input{width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s}
+.form-input:focus{border-color:var(--gold)}
+.form-btn{width:100%;padding:13px;background:var(--gold);border:none;border-radius:var(--r);color:#000;font-size:14px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;margin-top:8px;transition:all .15s}
+.form-btn:hover{background:var(--gold2)}
+.auth-msg{padding:10px 14px;border-radius:var(--r);font-size:13px;margin-bottom:14px;display:none}
+.auth-msg.error{background:var(--red-dim);border:1px solid rgba(255,79,79,.3);color:var(--red)}
+
+/* LAYOUT */
+.app{display:none;min-height:100vh}
+.sidebar{width:240px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);position:fixed;top:0;left:0;display:flex;flex-direction:column;z-index:100}
+.logo-wrap{padding:28px 22px 22px;border-bottom:1px solid var(--border)}
+.logo{font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:800;color:var(--gold)}
+.logo span{color:var(--text)}
+.logo-badge{display:inline-block;background:var(--red-dim);border:1px solid rgba(255,79,79,.3);color:var(--red);font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;letter-spacing:1px;margin-left:6px;vertical-align:middle}
+.logo-sub{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-top:3px}
+.nav{flex:1;padding:14px 10px}
+.nav-section{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:10px 12px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r);cursor:pointer;font-size:14px;color:var(--text2);transition:all .15s;margin-bottom:1px;border:1px solid transparent}
+.nav-item:hover{background:var(--surface);color:var(--text)}
+.nav-item.active{background:var(--gold-dim);color:var(--gold);border-color:rgba(212,168,67,.2)}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px}
+.sidebar-footer{padding:14px;border-top:1px solid var(--border)}
+.user-pill{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--r);background:var(--surface)}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--red-dim);border:1px solid var(--red);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;color:var(--red);flex-shrink:0}
+.main{margin-left:240px;min-height:100vh;display:flex;flex-direction:column}
+.topbar{height:64px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;gap:14px;background:var(--bg);position:sticky;top:0;z-index:50}
+.topbar-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;font-weight:700}
+.topbar-right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.content{padding:32px;flex:1}
+
+/* PAGES */
+.page{display:none}
+.page.active{display:block}
+.page-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--text3);margin-bottom:28px}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px 22px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat.gold::before{background:var(--gold)}
+.stat.green::before{background:var(--green)}
+.stat.blue::before{background:var(--blue)}
+.stat.red::before{background:var(--red)}
+.stat-label{font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.stat-val{font-family:'Plus Jakarta Sans',sans-serif;font-size:26px;font-weight:700}
+.stat-val.gold{color:var(--gold)}
+.stat-val.green{color:var(--green)}
+.stat-val.blue{color:var(--blue)}
+.stat-val.red{color:var(--red)}
+.stat-hint{font-size:12px;color:var(--text3);margin-top:5px}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:20px}
+.card-head{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700}
+.card-body{padding:22px}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);padding:10px 16px;border-bottom:1px solid var(--border)}
+.tbl td{padding:13px 16px;font-size:13px;border-bottom:1px solid var(--border)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover td{background:var(--surface)}
+
+/* BADGE */
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
+.badge-green{background:var(--green-dim);color:var(--green)}
+.badge-amber{background:var(--amber-dim);color:var(--amber)}
+.badge-red{background:var(--red-dim);color:var(--red)}
+.badge-blue{background:var(--blue-dim);color:var(--blue)}
+.badge-gold{background:var(--gold-dim);color:var(--gold)}
+.badge-gray{background:rgba(255,255,255,.06);color:var(--text2)}
+
+/* BUTTONS */
+.btn{padding:7px 14px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif}
+.btn-approve{background:var(--green-dim);border:1px solid rgba(40,214,138,.3);color:var(--green)}
+.btn-approve:hover{background:rgba(40,214,138,.2)}
+.btn-reject{background:var(--red-dim);border:1px solid rgba(255,79,79,.3);color:var(--red)}
+.btn-reject:hover{background:rgba(255,79,79,.2)}
+.btn-gold{background:var(--gold);color:#000;font-weight:700}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-ghost:hover{background:var(--surface);color:var(--text)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);width:500px;max-width:90vw;max-height:85vh;overflow-y:auto}
+.modal-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:700}
+.modal-close{cursor:pointer;background:none;border:none;color:var(--text3);font-size:22px;line-height:1}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+
+/* FORM */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* MISC */
+.empty{text-align:center;padding:48px 24px;color:var(--text3)}
+.empty-icon{font-size:36px;margin-bottom:12px}
+.empty-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;color:var(--text2);margin-bottom:6px}
+.spinner-wrap{display:flex;align-items:center;justify-content:center;padding:48px}
+.spinner{width:24px;height:24px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toasts{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:13px 18px;border-radius:var(--r);font-size:13px;min-width:260px;border:1px solid;display:flex;align-items:center;gap:10px;animation:slideIn .2s ease}
+.toast.success{background:#0a2018;border-color:rgba(40,214,138,.4);color:var(--green)}
+.toast.error{background:#200a0a;border-color:rgba(255,79,79,.4);color:var(--red)}
+.toast.info{background:#0a1220;border-color:rgba(79,141,232,.4);color:var(--blue)}
+@keyframes slideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+select.form-input{cursor:pointer}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.detail-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.detail-row:last-child{border-bottom:none}
+.detail-key{color:var(--text3)}
+.detail-val{font-family:'JetBrains Mono',monospace;font-weight:500;text-align:right}
+
+/* Skeleton Shimmer */
+.shimmer-row {
+  height: 18px;
+  background: linear-gradient(90deg, var(--bg3) 25%, var(--surface) 50%, var(--bg3) 75%);
+  background-size: 200% 100%;
+  animation: shimmerLoading 1.5s infinite linear;
+  border-radius: 6px;
+  margin: 8px 0;
+}
+@keyframes shimmerLoading {
+  to { background-position: -200% 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo" style="font-family: 'Plus Jakarta Sans', sans-serif;">Shadow<span>Quant</span> <span class="logo-badge" style="vertical-align: middle; margin-left: 4px;">ADMIN</span></div>
+    <div class="auth-sub">Fintech Private Limited · Control Panel</div>
+    <div id="authMsg" class="auth-msg"></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="lEmail" type="email" placeholder="admin@example.com"></div>
+    <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="lPass" type="password" placeholder="••••••••"></div>
+    <button class="form-btn" onclick="doLogin()">Sign In as Admin →</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appShell" class="app">
+  <aside class="sidebar">
+    <div class="logo-wrap" style="padding: 24px 20px; display: flex; flex-direction: column; gap: 4px;">
+      <div class="logo" style="font-size: 20px; font-weight: 800; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.5px;">Shadow<span style="color: var(--text);">Quant</span> <span class="logo-badge" style="vertical-align: middle; margin-left: 4px;">ADMIN</span></div>
+      <div class="logo-sub" style="font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text3); font-weight: 600; white-space: nowrap;">Fintech Private Limited</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <div class="nav-item active" onclick="goto('dashboard')"><span>⬡</span> Dashboard</div>
+      <div class="nav-section">Loan Management</div>
+      <div class="nav-item" onclick="goto('applications')"><span>📋</span> Applications <span class="nav-badge" id="pendingBadge" style="display:none">0</span></div>
+      <div class="nav-item" onclick="goto('activeloans')"><span>✅</span> Active Loans</div>
+      <div class="nav-section">Users</div>
+      <div class="nav-item" onclick="goto('users')"><span>👥</span> All Users</div>
+      <div class="nav-section">Account</div>
+      <div class="nav-item" onclick="doLogout()" style="margin-top:4px"><span>←</span> Sign Out</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="avatar">AD</div>
+        <div><div style="font-size:13px;font-weight:500" id="adminName">Admin</div><div style="font-size:11px;color:var(--text3)">Super Admin</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topTitle">Dashboard</div>
+      <div class="topbar-right">
+        <div class="live-dot"></div>
+        <span class="live-label" style="font-size:12px;color:var(--text3)">API Connected</span>
+        <button class="btn btn-ghost" id="themeToggleBtn" onclick="toggleTheme()" style="padding: 6px 12px; font-size: 11px; margin-right: 4px; font-weight: 700;">☀️ Light</button>
+        <button class="btn btn-ghost" onclick="refreshAll()" style="font-size:12px">↻ Refresh</button>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-title">Admin Dashboard</div>
+        <div class="page-sub">System overview and key metrics</div>
+        <div class="stats-grid">
+          <div class="stat blue"><div class="stat-label">Total Applications</div><div class="stat-val blue" id="dTotalApps">—</div><div class="stat-hint">All time</div></div>
+          <div class="stat amber" style="--amber:#e8962a"><div class="stat-label">Pending Review</div><div class="stat-val" style="color:var(--amber);font-family:'Syne',sans-serif;font-size:26px;font-weight:700" id="dPending">—</div><div class="stat-hint">Awaiting action</div></div>
+          <div class="stat green"><div class="stat-label">Active Loans</div><div class="stat-val green" id="dActive">—</div><div class="stat-hint">Currently running</div></div>
+          <div class="stat gold"><div class="stat-label">Total Users</div><div class="stat-val gold" id="dUsers">—</div><div class="stat-hint">Registered</div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">⚠ Pending Applications — Needs Your Action</div><button class="btn btn-gold" style="font-size:12px" onclick="goto('applications')">Review All →</button></div>
+          <div id="dashPending"><div class="spinner-wrap"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+      <!-- APPLICATIONS -->
+      <div class="page" id="page-applications">
+        <div class="page-title">Loan Applications</div>
+        <div class="page-sub">Review, approve or reject loan applications</div>
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+          <button class="btn btn-ghost" onclick="filterApps('ALL')" id="fAll" style="border-color:var(--gold);color:var(--gold)">All</button>
+          <button class="btn btn-ghost" onclick="filterApps('APPLIED')" id="fApplied">Applied</button>
+          <button class="btn btn-ghost" onclick="filterApps('UNDER_REVIEW')" id="fUnder">Under Review</button>
+          <button class="btn btn-ghost" onclick="filterApps('APPROVED')" id="fApproved">Approved</button>
+          <button class="btn btn-ghost" onclick="filterApps('REJECTED')" id="fRejected">Rejected</button>
+        </div>
+        <div class="card"><div id="appsBody"><div class="spinner-wrap"><div class="spinner"></div></div></div></div>
+      </div>
+
+      <!-- ACTIVE LOANS -->
+      <div class="page" id="page-activeloans">
+        <div class="page-title">Active Loans</div>
+        <div class="page-sub">All approved and active loans in the system</div>
+        <div class="card"><div id="activeLoansBody"><div class="spinner-wrap"><div class="spinner"></div></div></div></div>
+      </div>
+
+      <!-- USERS -->
+      <div class="page" id="page-users">
+        <div class="page-title">All Users</div>
+        <div class="page-sub">Registered users on the platform</div>
+        <div class="card"><div id="usersBody"><div class="spinner-wrap"><div class="spinner"></div></div></div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- APPROVE MODAL -->
+<div class="modal-overlay" id="approveModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">✅ Approve Loan Application</div>
+      <button class="modal-close" onclick="closeModal('approveModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="approveDetails" style="margin-bottom:20px"></div>
+      <div class="form-group"><label class="form-label">Approved Amount (₹)</label><input class="form-input" id="approveAmount" type="number" placeholder="Enter approved amount"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Interest Rate (% p.a.)</label><input class="form-input" id="approveRate" type="number" step="0.1" placeholder="12"></div>
+        <div class="form-group"><label class="form-label">Tenure (Months)</label><input class="form-input" id="approveTenure" type="number" placeholder="12"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Remarks (Optional)</label><input class="form-input" id="approveRemarks" placeholder="e.g. Approved after verification"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('approveModal')">Cancel</button>
+      <button class="btn btn-approve" style="padding:10px 20px;font-size:13px" onclick="submitApproval()">✅ Approve & Create Loan</button>
+    </div>
+  </div>
+</div>
+
+<!-- REJECT MODAL -->
+<div class="modal-overlay" id="rejectModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">❌ Reject Application</div>
+      <button class="modal-close" onclick="closeModal('rejectModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="rejectDetails" style="margin-bottom:20px"></div>
+      <div class="form-group"><label class="form-label">Reason for Rejection</label><input class="form-input" id="rejectReason" placeholder="e.g. Insufficient credit score, incomplete documents..."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('rejectModal')">Cancel</button>
+      <button class="btn btn-reject" style="padding:10px 20px;font-size:13px" onclick="submitRejection()">❌ Reject Application</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000/api'
+  : 'https://shadowquant-backend.onrender.com/api';
+let TOKEN = localStorage.getItem('sq_admin_token') || localStorage.getItem('sq_token');
+let USER  = JSON.parse(localStorage.getItem('sq_admin_user') || 'null');
+let allApps = [];
+let currentAppId = null;
+let pollingInterval = null;
+
+// ─── THEME ────────────────────────────────────────────────────
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  setTheme(next);
+}
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('sq_theme', theme);
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) {
+    btn.innerHTML = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+  }
+}
+document.documentElement.setAttribute('data-theme', localStorage.getItem('sq_theme') || 'dark');
+
+window.onload = () => { 
+  TOKEN && USER ? showApp() : showAuth(); 
+  setTheme(localStorage.getItem('sq_theme') || 'dark');
+};
+
+function showAuth() {
+  if (pollingInterval) clearInterval(pollingInterval);
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('appShell').style.display = 'none';
+  const reason = sessionStorage.getItem('logout_reason');
+  if (reason) {
+    const msg = document.getElementById('authMsg');
+    msg.className = 'auth-msg error';
+    msg.textContent = reason;
+    msg.style.display = 'block';
+    sessionStorage.removeItem('logout_reason');
+  }
+}
+function showApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = 'block';
+  document.getElementById('adminName').textContent = (USER?.first_name||'Admin')+' '+(USER?.last_name||'');
+  loadDashboard();
+
+  if (pollingInterval) clearInterval(pollingInterval);
+  pollingInterval = setInterval(silentRefresh, 30000);
+}
+
+async function silentRefresh() {
+  const activePage = document.querySelector('.page.active');
+  if (!activePage) return;
+  const pageId = activePage.id;
+  if (pageId === 'page-dashboard') {
+    await loadDashboard(true);
+  } else if (pageId === 'page-applications') {
+    await loadApplications(true);
+  } else if (pageId === 'page-activeloans') {
+    await loadActiveLoans(true);
+  } else if (pageId === 'page-users') {
+    await loadUsers(true);
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById('lEmail').value.trim();
+  const password = document.getElementById('lPass').value;
+  const msg = document.getElementById('authMsg');
+  msg.style.display = 'none';
+  try {
+    const r = await fetch(`${API}/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password}) });
+    const d = await r.json();
+    if (!r.ok) { msg.className='auth-msg error'; msg.textContent=d.error||'Login failed'; msg.style.display='block'; return; }
+    TOKEN = d.accessToken;
+    USER  = d.user;
+    localStorage.setItem('sq_admin_token', TOKEN);
+    localStorage.setItem('sq_admin_user', JSON.stringify(USER));
+    showApp();
+  } catch { msg.className='auth-msg error'; msg.textContent='Cannot connect to server. Is it running?'; msg.style.display='block'; }
+}
+
+function doLogout() {
+  if (pollingInterval) clearInterval(pollingInterval);
+  localStorage.removeItem('sq_admin_token');
+  localStorage.removeItem('sq_admin_user');
+  TOKEN=null;
+  USER=null;
+  showAuth();
+}
+
+async function api(path, method='GET', body=null) {
+  try {
+    const opts = { method, headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN} };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(API+path, opts);
+    updateConnectionPulse(true);
+    if (r.status===401) {
+      sessionStorage.setItem('logout_reason', 'Session expired. Please sign in again.');
+      doLogout();
+      return null;
+    }
+    return { ok:r.ok, data:await r.json() };
+  } catch (err) {
+    updateConnectionPulse(false);
+    return null;
+  }
+}
+
+const PAGE_TITLES = {dashboard:'Dashboard',applications:'Loan Applications',activeloans:'Active Loans',users:'All Users'};
+function goto(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('topTitle').textContent = PAGE_TITLES[page]||page;
+  const items = document.querySelectorAll('.nav-item');
+  const idx = {dashboard:0,applications:1,activeloans:2,users:3};
+  if (idx[page]!==undefined) items[idx[page]].classList.add('active');
+  if (page==='applications') loadApplications();
+  if (page==='activeloans') loadActiveLoans();
+  if (page==='users') loadUsers();
+}
+
+function refreshAll() { loadDashboard(); toast('Refreshed!','info'); }
+
+// ── DASHBOARD ──────────────────────────────────────────────────
+async function loadDashboard(silent = false) {
+  if (!silent) {
+    const el = document.getElementById('dashPending');
+    if (el) el.innerHTML = getSkeletonLoader(3);
+  }
+  const [rApps, rUsers] = await Promise.all([
+    api('/admin/applications'),
+    api('/admin/users')
+  ]);
+  
+  let apps = [];
+  if (rApps?.ok) {
+    apps = rApps.data.applications || [];
+  } else {
+    // fallback: try loan-applications
+    const r2 = await api('/loan-applications');
+    if (r2?.ok) { apps = r2.data.applications || []; }
+  }
+  
+  let usersCount = '—';
+  if (rUsers?.ok) {
+    usersCount = (rUsers.data.users || []).length;
+  }
+  
+  renderDashFromApps(apps, usersCount);
+}
+
+function renderDashFromApps(apps, usersCount) {
+  allApps = apps;
+  const pending = apps.filter(a=>a.status==='APPLIED'||a.status==='UNDER_REVIEW');
+  const approved = apps.filter(a=>a.status==='APPROVED'||a.status==='ACTIVE');
+  document.getElementById('dTotalApps').textContent = apps.length;
+  document.getElementById('dPending').textContent = pending.length;
+  document.getElementById('dActive').textContent = approved.length;
+  document.getElementById('dUsers').textContent = usersCount;
+
+  const badge = document.getElementById('pendingBadge');
+  badge.style.display = pending.length?'inline':'none';
+  badge.textContent = pending.length;
+
+  const el = document.getElementById('dashPending');
+  if (!pending.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">No pending applications!</div><div class="empty-sub">All caught up.</div></div>`;
+    return;
+  }
+  el.innerHTML = `<table class="tbl"><thead><tr><th>ID</th><th>User</th><th>Purpose</th><th>Amount</th><th>Tenure</th><th>Rate</th><th>Date</th><th>Actions</th></tr></thead>
+    <tbody>${pending.map(a=>`<tr>
+      <td><span style="font-family:'DM Mono',monospace;color:var(--gold)">#${a.id}</span></td>
+      <td style="font-size:12px">${a.first_name||''} ${a.last_name||''}<br><span style="color:var(--text3)">${a.email||'User #'+a.user_id}</span></td>
+      <td>${a.purpose||'—'}</td>
+      <td style="font-family:'DM Mono',monospace">₹${parseFloat(a.requested_amount).toLocaleString('en-IN')}</td>
+      <td>${a.tenure_months} mo</td>
+      <td>${a.interest_rate||12}%</td>
+      <td style="font-size:11px;color:var(--text3)">${fmtDate(a.created_at)}</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-approve" onclick="openApprove(${a.id},${a.requested_amount},${a.tenure_months},${a.interest_rate||12},'${a.purpose||''}')">✅ Approve</button>
+        <button class="btn btn-reject" onclick="openReject(${a.id},'${a.purpose||''}')">❌ Reject</button>
+      </div></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+// ── APPLICATIONS ───────────────────────────────────────────────
+let currentFilter = 'ALL';
+let applicationsSearchQuery = '';
+let currentApplicationsPage = 1;
+const APPLICATIONS_PER_PAGE = 5;
+let applicationsSearchDebounce = null;
+
+async function loadApplications(silent = false) {
+  const el = document.getElementById('appsBody');
+  if (!silent) el.innerHTML = getSkeletonLoader();
+  const r = await api('/loan-applications');
+  if (!r?.ok) { el.innerHTML=`<div class="empty"><div class="empty-title">Failed to load</div></div>`; return; }
+  allApps = r.data.applications || [];
+  renderAppsLedger();
+}
+
+function filterApps(f) {
+  currentFilter = f;
+  document.querySelectorAll('[id^="f"]').forEach(b=>{ b.style.borderColor=''; b.style.color=''; });
+  const map = {ALL:'fAll',APPLIED:'fApplied',UNDER_REVIEW:'fUnder',APPROVED:'fApproved',REJECTED:'fRejected'};
+  if (map[f]) { document.getElementById(map[f]).style.borderColor='var(--gold)'; document.getElementById(map[f]).style.color='var(--gold)'; }
+  currentApplicationsPage = 1;
+  renderAppsLedger();
+}
+
+function debounceSearchApplications(val) {
+  clearTimeout(applicationsSearchDebounce);
+  applicationsSearchDebounce = setTimeout(() => {
+    applicationsSearchQuery = val.trim().toLowerCase();
+    currentApplicationsPage = 1;
+    renderAppsLedger();
+  }, 250);
+}
+
+function renderAppsLedger() {
+  const el = document.getElementById('appsBody');
+  
+  // Filter based on filter tabs AND search query
+  const filteredByStatus = currentFilter==='ALL' ? allApps : allApps.filter(a=>a.status===currentFilter);
+  
+  const filtered = filteredByStatus.filter(a => 
+    (a.first_name || '').toLowerCase().includes(applicationsSearchQuery) ||
+    (a.last_name || '').toLowerCase().includes(applicationsSearchQuery) ||
+    (a.email || '').toLowerCase().includes(applicationsSearchQuery) ||
+    (a.purpose || '').toLowerCase().includes(applicationsSearchQuery) ||
+    String(a.id).includes(applicationsSearchQuery)
+  );
+
+  if (!filtered.length) {
+    el.innerHTML = `
+      <input type="text" id="appsSearchInput" placeholder="Search by applicant, purpose or ID..." value="${applicationsSearchQuery}" oninput="debounceSearchApplications(this.value)" class="form-input" style="margin: 16px; font-size:12px; padding:8px 12px; width: 320px;" />
+      <div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No applications match your search</div></div>
+    `;
+    return;
+  }
+
+  // Calculate pagination bounds
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / APPLICATIONS_PER_PAGE);
+  if (currentApplicationsPage > totalPages) currentApplicationsPage = totalPages;
+  if (currentApplicationsPage < 1) currentApplicationsPage = 1;
+
+  const startIndex = (currentApplicationsPage - 1) * APPLICATIONS_PER_PAGE;
+  const endIndex = Math.min(startIndex + APPLICATIONS_PER_PAGE, totalItems);
+  const pageItems = filtered.slice(startIndex, endIndex);
+
+  el.innerHTML = `
+    <input type="text" id="appsSearchInput" placeholder="Search by applicant, purpose or ID..." value="${applicationsSearchQuery}" oninput="debounceSearchApplications(this.value)" class="form-input" style="margin: 16px; font-size:12px; padding:8px 12px; width: 320px;" />
+    
+    <div style="min-height: 230px;"><table class="tbl"><thead><tr><th>ID</th><th>Applicant</th><th>Purpose</th><th>Amount</th><th>Tenure</th><th>Rate</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+      <tbody>${pageItems.map(a=>`<tr>
+        <td><span style="font-family:'DM Mono',monospace;color:var(--gold)">#${a.id}</span></td>
+        <td style="font-size:12px">${a.first_name||''} ${a.last_name||''}<br><span style="color:var(--text3)">${a.email||'User #'+a.user_id}</span></td>
+        <td>${a.purpose||'—'}</td>
+        <td style="font-family:'DM Mono',monospace">₹${parseFloat(a.requested_amount).toLocaleString('en-IN')}</td>
+        <td>${a.tenure_months} mo</td>
+        <td>${a.interest_rate||12}%</td>
+        <td>${badge(a.status)}</td>
+        <td style="font-size:11px;color:var(--text3)">${fmtDate(a.created_at)}</td>
+        <td><div style="display:flex;gap:6px">
+          ${(a.status==='APPLIED'||a.status==='UNDER_REVIEW') ? `
+            <button class="btn btn-approve" onclick="openApprove(${a.id},${a.requested_amount},${a.tenure_months},${a.interest_rate||12},'${a.purpose||''}')">✅</button>
+            <button class="btn btn-reject" onclick="openReject(${a.id},'${a.purpose||''}')">❌</button>
+          ` : `<span style="font-size:12px;color:var(--text3)">—</span>`}
+        </div></td>
+      </tr>`).join('')}
+    </tbody></table></div>
+
+    <!-- Pagination controls -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding:16px; border-top:1px solid var(--border)">
+      <div style="font-size:11px; color:var(--text3)">Showing ${startIndex + 1}-${endIndex} of ${totalItems}</div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="btn btn-ghost" style="padding:4px 10px; font-size:11px" ${currentApplicationsPage === 1 ? 'disabled style="opacity:0.4; cursor:not-allowed"' : ''} onclick="prevApplicationsPage()">Prev</button>
+        <span style="font-size:11px; color:var(--text2)">Page ${currentApplicationsPage} of ${totalPages}</span>
+        <button class="btn btn-ghost" style="padding:4px 10px; font-size:11px" ${currentApplicationsPage === totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed"' : ''} onclick="nextApplicationsPage()">Next</button>
+      </div>
+    </div>
+  `;
+
+  // Refocus input safely
+  const inp = document.getElementById('appsSearchInput');
+  if (inp) {
+    inp.focus();
+    inp.selectionStart = inp.selectionEnd = inp.value.length;
+  }
+}
+
+function prevApplicationsPage() {
+  if (currentApplicationsPage > 1) {
+    currentApplicationsPage--;
+    renderAppsLedger();
+  }
+}
+
+function nextApplicationsPage() {
+  const filteredByStatus = currentFilter==='ALL' ? allApps : allApps.filter(a=>a.status===currentFilter);
+  const filteredCount = filteredByStatus.filter(a => 
+    (a.first_name || '').toLowerCase().includes(applicationsSearchQuery) ||
+    (a.last_name || '').toLowerCase().includes(applicationsSearchQuery) ||
+    (a.email || '').toLowerCase().includes(applicationsSearchQuery) ||
+    (a.purpose || '').toLowerCase().includes(applicationsSearchQuery) ||
+    String(a.id).includes(applicationsSearchQuery)
+  ).length;
+  const maxPages = Math.ceil(filteredCount / APPLICATIONS_PER_PAGE);
+  if (currentApplicationsPage < maxPages) {
+    currentApplicationsPage++;
+    renderAppsLedger();
+  }
+}
+
+// ── ACTIVE LOANS ───────────────────────────────────────────────
+let CURRENT_LOANS = [];
+let loansSearchQuery = '';
+let currentLoansPage = 1;
+const LOANS_PER_PAGE = 5;
+let loansSearchDebounce = null;
+
+async function loadActiveLoans(silent = false) {
+  const el = document.getElementById('activeLoansBody');
+  if (!silent) el.innerHTML = getSkeletonLoader();
+  const r = await api('/admin/loans');
+  if (!r?.ok) { el.innerHTML=`<div class="empty"><div class="empty-icon">💼</div><div class="empty-title">No loans data</div><div class="empty-sub">Approve some applications first</div></div>`; return; }
+  const loans = r.data.loans || [];
+  CURRENT_LOANS = loans;
+  renderLoansLedger();
+}
+
+function debounceSearchLoans(val) {
+  clearTimeout(loansSearchDebounce);
+  loansSearchDebounce = setTimeout(() => {
+    loansSearchQuery = val.trim().toLowerCase();
+    currentLoansPage = 1;
+    renderLoansLedger();
+  }, 250);
+}
+
+function renderLoansLedger() {
+  const el = document.getElementById('activeLoansBody');
+  if (!CURRENT_LOANS.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">💼</div><div class="empty-title">No active loans yet</div><div class="empty-sub">Approve some applications to create loans</div></div>`;
+    return;
+  }
+
+  // Filter based on search query
+  const filtered = CURRENT_LOANS.filter(l => 
+    (l.first_name || '').toLowerCase().includes(loansSearchQuery) ||
+    (l.last_name || '').toLowerCase().includes(loansSearchQuery) ||
+    (l.purpose || '').toLowerCase().includes(loansSearchQuery) ||
+    String(l.id).includes(loansSearchQuery)
+  );
+
+  if (!filtered.length) {
+    el.innerHTML = `
+      <input type="text" id="loansSearchInput" placeholder="Search by borrower, purpose or Loan ID..." value="${loansSearchQuery}" oninput="debounceSearchLoans(this.value)" class="form-input" style="margin: 16px; font-size:12px; padding:8px 12px; width: 320px;" />
+      <div class="empty"><div class="empty-title">No loans match your search</div></div>
+    `;
+    return;
+  }
+
+  // Calculate pagination bounds
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / LOANS_PER_PAGE);
+  if (currentLoansPage > totalPages) currentLoansPage = totalPages;
+  if (currentLoansPage < 1) currentLoansPage = 1;
+
+  const startIndex = (currentLoansPage - 1) * LOANS_PER_PAGE;
+  const endIndex = Math.min(startIndex + LOANS_PER_PAGE, totalItems);
+  const pageItems = filtered.slice(startIndex, endIndex);
+
+  el.innerHTML = `
+    <input type="text" id="loansSearchInput" placeholder="Search by borrower, purpose or Loan ID..." value="${loansSearchQuery}" oninput="debounceSearchLoans(this.value)" class="form-input" style="margin: 16px; font-size:12px; padding:8px 12px; width: 320px;" />
+    
+    <div style="min-height: 230px;"><table class="tbl"><thead><tr><th>Loan ID</th><th>Borrower</th><th>Principal</th><th>Outstanding</th><th>Rate</th><th>Tenure</th><th>Status</th><th>Created</th></tr></thead>
+      <tbody>${pageItems.map(l=>`<tr>
+        <td><span style="font-family:'DM Mono',monospace;color:var(--gold)">#${l.id}</span></td>
+        <td style="font-size:12px">${l.first_name||''} ${l.last_name||''}</td>
+        <td style="font-family:'DM Mono',monospace">₹${parseFloat(l.principal_amount||0).toLocaleString('en-IN')}</td>
+        <td style="font-family:'DM Mono',monospace;color:var(--amber)">₹${parseFloat(l.outstanding_principal||0).toLocaleString('en-IN')}</td>
+        <td>${l.interest_rate}%</td>
+        <td>${l.tenure_months} mo</td>
+        <td>${badge(l.status)}</td>
+        <td style="font-size:11px;color:var(--text3)">${fmtDate(l.created_at)}</td>
+      </tr>`).join('')}
+    </tbody></table></div>
+
+    <!-- Pagination controls -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding:16px; border-top:1px solid var(--border)">
+      <div style="font-size:11px; color:var(--text3)">Showing ${startIndex + 1}-${endIndex} of ${totalItems}</div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="btn btn-ghost" style="padding:4px 10px; font-size:11px" ${currentLoansPage === 1 ? 'disabled style="opacity:0.4; cursor:not-allowed"' : ''} onclick="prevLoansPage()">Prev</button>
+        <span style="font-size:11px; color:var(--text2)">Page ${currentLoansPage} of ${totalPages}</span>
+        <button class="btn btn-ghost" style="padding:4px 10px; font-size:11px" ${currentLoansPage === totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed"' : ''} onclick="nextLoansPage()">Next</button>
+      </div>
+    </div>
+  `;
+
+  // Refocus input safely
+  const inp = document.getElementById('loansSearchInput');
+  if (inp) {
+    inp.focus();
+    inp.selectionStart = inp.selectionEnd = inp.value.length;
+  }
+}
+
+function prevLoansPage() {
+  if (currentLoansPage > 1) {
+    currentLoansPage--;
+    renderLoansLedger();
+  }
+}
+
+function nextLoansPage() {
+  const filteredCount = CURRENT_LOANS.filter(l => 
+    (l.first_name || '').toLowerCase().includes(loansSearchQuery) ||
+    (l.last_name || '').toLowerCase().includes(loansSearchQuery) ||
+    (l.purpose || '').toLowerCase().includes(loansSearchQuery) ||
+    String(l.id).includes(loansSearchQuery)
+  ).length;
+  const maxPages = Math.ceil(filteredCount / LOANS_PER_PAGE);
+  if (currentLoansPage < maxPages) {
+    currentLoansPage++;
+    renderLoansLedger();
+  }
+}
+
+// ── USERS ──────────────────────────────────────────────────────
+let CURRENT_USERS = [];
+let usersSearchQuery = '';
+let currentUsersPage = 1;
+const USERS_PER_PAGE = 5;
+let usersSearchDebounce = null;
+
+async function loadUsers(silent = false) {
+  const el = document.getElementById('usersBody');
+  if (!silent) el.innerHTML = getSkeletonLoader(6);
+  const r = await api('/admin/users');
+  if (!r?.ok) { el.innerHTML=`<div class="empty"><div class="empty-icon">👥</div><div class="empty-title">Could not load users</div></div>`; return; }
+  const users = r.data.users || [];
+  document.getElementById('dUsers').textContent = users.length;
+  
+  CURRENT_USERS = users;
+  renderUsersLedger();
+}
+
+function debounceSearchUsers(val) {
+  clearTimeout(usersSearchDebounce);
+  usersSearchDebounce = setTimeout(() => {
+    usersSearchQuery = val.trim().toLowerCase();
+    currentUsersPage = 1;
+    renderUsersLedger();
+  }, 250);
+}
+
+function renderUsersLedger() {
+  const el = document.getElementById('usersBody');
+  if (!CURRENT_USERS.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-title">No users found</div></div>`;
+    return;
+  }
+
+  // Filter based on search query
+  const filtered = CURRENT_USERS.filter(u => 
+    (u.first_name || '').toLowerCase().includes(usersSearchQuery) ||
+    (u.last_name || '').toLowerCase().includes(usersSearchQuery) ||
+    (u.email || '').toLowerCase().includes(usersSearchQuery) ||
+    (u.pan_number || '').toLowerCase().includes(usersSearchQuery)
+  );
+
+  if (!filtered.length) {
+    el.innerHTML = `
+      <input type="text" id="usersSearchInput" placeholder="Search by name, email or PAN..." value="${usersSearchQuery}" oninput="debounceSearchUsers(this.value)" class="form-input" style="margin: 16px; font-size:12px; padding:8px 12px; width: 320px;" />
+      <div class="empty"><div class="empty-title">No users match your search</div></div>
+    `;
+    return;
+  }
+
+  // Calculate pagination bounds
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / USERS_PER_PAGE);
+  if (currentUsersPage > totalPages) currentUsersPage = totalPages;
+  if (currentUsersPage < 1) currentUsersPage = 1;
+
+  const startIndex = (currentUsersPage - 1) * USERS_PER_PAGE;
+  const endIndex = Math.min(startIndex + USERS_PER_PAGE, totalItems);
+  const pageItems = filtered.slice(startIndex, endIndex);
+
+  el.innerHTML = `
+    <input type="text" id="usersSearchInput" placeholder="Search by name, email or PAN..." value="${usersSearchQuery}" oninput="debounceSearchUsers(this.value)" class="form-input" style="margin: 16px; font-size:12px; padding:8px 12px; width: 320px;" />
+    
+    <div style="min-height: 230px;"><table class="tbl"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>PAN</th><th>Status</th><th>Joined</th></tr></thead>
+      <tbody>${pageItems.map(u=>`<tr>
+        <td><span style="font-family:'DM Mono',monospace;color:var(--gold)">#${u.id}</span></td>
+        <td>${u.first_name||''} ${u.last_name||''}</td>
+        <td style="font-size:12px;color:var(--text3)">${u.email}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:12px">${maskPhone(u.phone_number)}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:12px">${maskPAN(u.pan_number)}</td>
+        <td>${u.is_active?'<span class="badge badge-green">Active</span>':'<span class="badge badge-red">Inactive</span>'}</td>
+        <td style="font-size:11px;color:var(--text3)">${fmtDate(u.created_at)}</td>
+      </tr>`).join('')}
+    </tbody></table></div>
+
+    <!-- Pagination controls -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding:16px; border-top:1px solid var(--border)">
+      <div style="font-size:11px; color:var(--text3)">Showing ${startIndex + 1}-${endIndex} of ${totalItems}</div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="btn btn-ghost" style="padding:4px 10px; font-size:11px" ${currentUsersPage === 1 ? 'disabled style="opacity:0.4; cursor:not-allowed"' : ''} onclick="prevUsersPage()">Prev</button>
+        <span style="font-size:11px; color:var(--text2)">Page ${currentUsersPage} of ${totalPages}</span>
+        <button class="btn btn-ghost" style="padding:4px 10px; font-size:11px" ${currentUsersPage === totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed"' : ''} onclick="nextUsersPage()">Next</button>
+      </div>
+    </div>
+  `;
+
+  // Refocus input safely
+  const inp = document.getElementById('usersSearchInput');
+  if (inp) {
+    inp.focus();
+    inp.selectionStart = inp.selectionEnd = inp.value.length;
+  }
+}
+
+function prevUsersPage() {
+  if (currentUsersPage > 1) {
+    currentUsersPage--;
+    renderUsersLedger();
+  }
+}
+
+function nextUsersPage() {
+  const filteredCount = CURRENT_USERS.filter(u => 
+    (u.first_name || '').toLowerCase().includes(usersSearchQuery) ||
+    (u.last_name || '').toLowerCase().includes(usersSearchQuery) ||
+    (u.email || '').toLowerCase().includes(usersSearchQuery) ||
+    (u.pan_number || '').toLowerCase().includes(usersSearchQuery)
+  ).length;
+  const maxPages = Math.ceil(filteredCount / USERS_PER_PAGE);
+  if (currentUsersPage < maxPages) {
+    currentUsersPage++;
+    renderUsersLedger();
+  }
+}
+
+// ── APPROVE ────────────────────────────────────────────────────
+function openApprove(id, amount, tenure, rate, purpose) {
+  currentAppId = id;
+  document.getElementById('approveAmount').value = amount;
+  document.getElementById('approveTenure').value = tenure;
+  document.getElementById('approveRate').value = rate;
+  document.getElementById('approveRemarks').value = '';
+  document.getElementById('approveDetails').innerHTML = `
+    <div style="background:var(--green-dim);border:1px solid rgba(40,214,138,.2);border-radius:var(--r);padding:14px">
+      <div style="font-size:12px;color:var(--green);margin-bottom:4px">APPLICATION #${id}</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700">${purpose||'Loan'}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px">Requested: ₹${parseFloat(amount).toLocaleString('en-IN')} · ${tenure} months · ${rate}%</div>
+    </div>`;
+  document.getElementById('approveModal').classList.add('open');
+}
+
+async function submitApproval() {
+  const amount = parseFloat(document.getElementById('approveAmount').value);
+  const rate   = parseFloat(document.getElementById('approveRate').value);
+  const tenure = parseInt(document.getElementById('approveTenure').value);
+  const remarks = document.getElementById('approveRemarks').value.trim();
+  if (!amount||!rate||!tenure) return toast('Fill all fields','error');
+
+  const r = await api(`/admin/applications/${currentAppId}/approve`, 'POST', { approved_amount:amount, interest_rate:rate, tenure_months:tenure, remarks });
+  if (r?.ok) {
+    toast('✅ Loan approved and created!', 'success');
+    closeModal('approveModal');
+    loadDashboard();
+    loadApplications();
+  } else toast(r?.data?.error||'Approval failed', 'error');
+}
+
+// ── REJECT ─────────────────────────────────────────────────────
+function openReject(id, purpose) {
+  currentAppId = id;
+  document.getElementById('rejectReason').value = '';
+  document.getElementById('rejectDetails').innerHTML = `
+    <div style="background:var(--red-dim);border:1px solid rgba(255,79,79,.2);border-radius:var(--r);padding:14px">
+      <div style="font-size:12px;color:var(--red);margin-bottom:4px">APPLICATION #${id}</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700">${purpose||'Loan Application'}</div>
+    </div>`;
+  document.getElementById('rejectModal').classList.add('open');
+}
+
+async function submitRejection() {
+  const reason = document.getElementById('rejectReason').value.trim();
+  if (!reason) return toast('Please provide a reason', 'error');
+  const r = await api(`/admin/applications/${currentAppId}/reject`, 'POST', { reason });
+  if (r?.ok) {
+    toast('Application rejected', 'info');
+    closeModal('rejectModal');
+    loadDashboard();
+    loadApplications();
+  } else toast(r?.data?.error||'Rejection failed', 'error');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── HELPERS ────────────────────────────────────────────────────
+function getSkeletonLoader(rows = 4) {
+  let html = '<div style="padding: 16px; display:flex; flex-direction:column; gap:8px;">';
+  for (let i = 0; i < rows; i++) {
+    html += `<div class="shimmer-row" style="width: ${100 - (i * 8)}%"></div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function updateConnectionPulse(isOnline) {
+  const dot = document.querySelector('.live-dot');
+  const lbl = document.querySelector('.live-label');
+  if (dot && lbl) {
+    if (isOnline) {
+      dot.style.backgroundColor = 'var(--green)';
+      dot.style.boxShadow = '0 0 8px var(--green)';
+      lbl.textContent = 'API Connected';
+      lbl.style.color = 'var(--text2)';
+    } else {
+      dot.style.backgroundColor = 'var(--red)';
+      dot.style.boxShadow = '0 0 8px var(--red)';
+      lbl.textContent = 'API Reconnecting...';
+      lbl.style.color = 'var(--red)';
+    }
+  }
+}
+
+function badge(s) {
+  const map = {APPLIED:'badge-blue',UNDER_REVIEW:'badge-amber',APPROVED:'badge-gold',ACTIVE:'badge-green',CLOSED:'badge-gray',DEFAULTED:'badge-red',REJECTED:'badge-red',FORECLOSED:'badge-gray'};
+  return `<span class="badge ${map[s]||'badge-gray'}">${s||'—'}</span>`;
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  try { return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); } catch { return '—'; }
+}
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type==='success'?'✓':type==='error'?'⚠':'ℹ'}</span>${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(), 4000);
+}
+function maskPhone(p) { return p ? p.replace(/(\+\d{2})?(\d{2})\d{4}(\d{4})/, '$1 $2******$3') : '—'; }
+function maskPAN(pan) { return pan ? pan.replace(/^(\w{3})\w{3}(\w{4})$/, '$1***$2') : '—'; }
+</script>
+</body>
+</html>
