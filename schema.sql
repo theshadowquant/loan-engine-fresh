@@ -72,6 +72,7 @@ CREATE TABLE loan_applications (
     reviewed_by BIGINT UNSIGNED,
     reviewed_at TIMESTAMP NULL,
     rejection_reason TEXT,
+    remarks TEXT,
     loan_id BIGINT UNSIGNED,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -97,6 +98,21 @@ CREATE TABLE loans (
     outstanding_principal DECIMAL(15,2),
 
     FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+-- =========================
+-- 5b. LOAN_SUMMARY
+-- =========================
+CREATE TABLE loan_summary (
+    loan_id BIGINT UNSIGNED PRIMARY KEY,
+    total_principal DECIMAL(15,2) NOT NULL,
+    total_interest DECIMAL(15,2) NOT NULL,
+    total_payable DECIMAL(15,2) NOT NULL,
+    amount_paid DECIMAL(15,2) DEFAULT 0.00,
+    outstanding_principal DECIMAL(15,2) NOT NULL,
+    penalties_due DECIMAL(15,2) DEFAULT 0.00,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (loan_id) REFERENCES loans(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- =========================
