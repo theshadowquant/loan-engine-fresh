@@ -30,21 +30,20 @@ exports.makePayment = async (req, res, next) => {
       [loanId, req.user.id, amount, payment_method, transaction_reference, 'SUCCESS']
     );
 
-    // Mark exactly ONE next PENDING EMI as PAID
+    // Mark exactly ONE next PENDING EMI as PAID (use single quotes — Aiven uses ANSI_QUOTES mode)
     const [[nextEMI]] = await db.query(
-      'SELECT * FROM emi_schedule WHERE loan_id = ? AND status = "PENDING" ORDER BY installment_number ASC LIMIT 1',
+      "SELECT * FROM emi_schedule WHERE loan_id = ? AND status = 'PENDING' ORDER BY installment_number ASC LIMIT 1",
       [loanId]
     );
 
     if (nextEMI) {
-      // Mark this EMI as PAID
       await db.query(
-        'UPDATE emi_schedule SET status = "PAID" WHERE id = ?',
+        "UPDATE emi_schedule SET status = 'PAID' WHERE id = ?",
         [nextEMI.id]
       );
     }
 
-    // Reduce outstanding by the actual amount paid — direct and intuitive
+    // Reduce outstanding by the actual amount paid
     await db.query(
       'UPDATE loans SET outstanding_principal = GREATEST(0, outstanding_principal - ?) WHERE id = ?',
       [parseFloat(amount), loanId]
@@ -53,12 +52,12 @@ exports.makePayment = async (req, res, next) => {
     // If no more PENDING EMIs, close the loan
     if (nextEMI) {
       const [[{ remaining }]] = await db.query(
-        'SELECT COUNT(*) AS remaining FROM emi_schedule WHERE loan_id = ? AND status = "PENDING"',
+        "SELECT COUNT(*) AS remaining FROM emi_schedule WHERE loan_id = ? AND status = 'PENDING'",
         [loanId]
       );
       if (Number(remaining) === 0) {
         await db.query(
-          'UPDATE loans SET status = "CLOSED", outstanding_principal = 0 WHERE id = ?',
+          "UPDATE loans SET status = 'CLOSED', outstanding_principal = 0 WHERE id = ?",
           [loanId]
         );
       }
