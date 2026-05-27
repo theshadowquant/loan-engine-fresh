@@ -2,10 +2,7 @@
 -- LOAN MANAGEMENT & EMI TRACKING SYSTEM — CLEAN SCHEMA
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS loan_engine
-CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-USE loan_engine;
 
 -- =========================
 -- 1. USERS
