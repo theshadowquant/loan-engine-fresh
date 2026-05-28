@@ -1254,17 +1254,19 @@
 
     /* Sidebar overlay backdrop */
     .sidebar-overlay {
-      display: none;
+      display: block;
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.55);
       backdrop-filter: blur(4px);
       z-index: 99;
       opacity: 0;
+      pointer-events: none;        /* KEY FIX: invisible = not clickable */
       transition: opacity .25s;
     }
     .sidebar-overlay.visible {
       opacity: 1;
+      pointer-events: auto;        /* only blocks clicks when actually open */
     }
 
     /* ═══════════════════════════════════════════
@@ -1344,9 +1346,7 @@
       .sidebar.mob-open {
         transform: translateX(0);
       }
-      .sidebar-overlay {
-        display: block;
-      }
+      /* overlay already display:block globally; pointer-events handles visibility */
 
       /* Main content: no sidebar offset, add bottom-nav padding */
       .main {
@@ -1444,14 +1444,32 @@
         top: auto;
       }
 
-      /* Tables: horizontal scroll */
-      .card { overflow-x: auto; }
+      /* Tables: wrap in scroll container, not the card itself */
+      .card { overflow: visible; }
+      .tbl-scroll-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
       .tbl {
-        min-width: 480px;
+        min-width: 520px;
         font-size: 12px;
       }
       .tbl th, .tbl td {
         padding: 8px 10px;
+      }
+
+      /* Ensure range sliders are touch-interactive */
+      input[type="range"] {
+        touch-action: pan-x;
+        cursor: pointer;
+      }
+
+      /* Ensure all buttons and interactive elements respond to touch */
+      button, .btn, .nav-item, .auth-tab,
+      .mob-bottomnav-item, .nav-item {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(28,82,255,0.15);
+        cursor: pointer;
       }
 
       /* Receipt modal: full screen on mobile */
@@ -2260,14 +2278,14 @@
         el.innerHTML = `<div class="empty"><div class="empty-icon">◈</div><div class="empty-title">No applications yet</div><div class="empty-sub">Apply for your first loan to get started</div></div>`;
         return;
       }
-      el.innerHTML = `<table class="tbl"><thead><tr><th>ID</th><th>Purpose</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+      el.innerHTML = `<div class="tbl-scroll-wrap"><table class="tbl"><thead><tr><th>ID</th><th>Purpose</th><th>Amount</th><th>Status</th></tr></thead><tbody>
     ${apps.slice(0, 5).map(a => `<tr>
       <td><span style="font-family:'DM Mono',monospace;color:var(--gold)">#${a.id}</span></td>
       <td>${a.purpose || '—'}</td>
       <td style="font-family:'DM Mono',monospace">₹${parseFloat(a.requested_amount).toLocaleString('en-IN')}</td>
       <td>${badge(a.status)}</td>
     </tr>`).join('')}
-  </tbody></table>`;
+  </tbody></table></div>`;
     }
 
     // ─── LOANS ────────────────────────────────────────────────────
@@ -2281,7 +2299,7 @@
         el.innerHTML = `<div class="empty"><div class="empty-icon">◈</div><div class="empty-title">No loan applications</div><div class="empty-sub">You haven't applied for any loans yet</div><br><button class="btn btn-gold" onclick="goto('apply')">Apply Now</button></div>`;
         return;
       }
-      el.innerHTML = `<table class="tbl"><thead><tr><th>ID</th><th>Purpose</th><th>Amount</th><th>Tenure</th><th>Rate</th><th>Status</th><th>Applied On</th></tr></thead><tbody>
+      el.innerHTML = `<div class="tbl-scroll-wrap"><table class="tbl"><thead><tr><th>ID</th><th>Purpose</th><th>Amount</th><th>Tenure</th><th>Rate</th><th>Status</th><th>Applied On</th></tr></thead><tbody>
     ${apps.map(a => `<tr>
       <td><span style="font-family:'DM Mono',monospace;color:var(--gold)">#${a.id}</span></td>
       <td>${a.purpose || '—'}</td>
@@ -2291,7 +2309,7 @@
       <td>${badge(a.status)}</td>
       <td style="font-size:12px;color:var(--text3)">${fmtDate(a.created_at)}</td>
     </tr>`).join('')}
-  </tbody></table>`;
+  </tbody></table></div>`;
     }
 
     // ─── APPLY ────────────────────────────────────────────────────
@@ -2393,7 +2411,7 @@
       <div class="stat red"><div class="stat-label">Total Amount</div><div class="stat-val red" style="font-size:18px">₹${Math.round(total).toLocaleString('en-IN')}</div></div>
     </div>
     <div class="card">
-      <table class="tbl">
+      <div class="tbl-scroll-wrap"><table class="tbl">
         <thead><tr><th>#</th><th>Due Date</th><th>EMI</th><th>Principal</th><th>Interest</th><th>Remaining Balance</th><th>Status</th></tr></thead>
         <tbody>${emis.map(e => `<tr>
           <td style="font-family:'DM Mono',monospace;color:var(--text3)">${e.installment_number}</td>
@@ -2404,7 +2422,7 @@
           <td style="font-family:'DM Mono',monospace;color:var(--text2)">₹${parseFloat(e.balance_after || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
           <td>${badge(e.status)}</td>
         </tr>`).join('')}</tbody>
-      </table>
+      </table></div>
     </div>`;
     }
 
@@ -2568,7 +2586,7 @@
       el.innerHTML = `
         <input type="text" id="paySearchInput" placeholder="Search by UTR or Loan ID..." value="${paymentSearchQuery}" oninput="debounceSearchPayments(this.value)" class="form-input" style="margin-bottom:12px; font-size:12px; padding:8px 12px;" />
         
-        <div style="min-height: 230px;"><table class="tbl">
+        <div class="tbl-scroll-wrap" style="min-height: 230px;"><table class="tbl">
           <thead><tr><th>UTR / Ref</th><th>Loan</th><th>Amount</th><th>Method</th><th>Date</th><th>Action</th></tr></thead>
           <tbody>${pageItems.map(p => {
             const origIndex = CURRENT_PAYMENTS.findIndex(orig => orig.id === p.id);
