@@ -179,16 +179,25 @@
       cursor: pointer;
       margin-top: 8px;
       transition: all .15s;
-      letter-spacing: .3px
+      letter-spacing: .3px;
+      display: flex;
+      align-items: center;
+      justify-content: center
     }
 
     .form-btn:hover {
-      background: var(--gold2)
+      background: var(--gold2);
+      transform: translateY(-1px)
+    }
+
+    .form-btn:active {
+      transform: translateY(1px) scale(0.98)
     }
 
     .form-btn:disabled {
       opacity: .6;
-      cursor: not-allowed
+      cursor: not-allowed;
+      transform: none !important
     }
 
     .auth-msg {
@@ -2119,14 +2128,28 @@
         password: document.getElementById('rPass').value,
       };
       if (!body.email || !body.password) return showMsg('Email and password are required', 'error');
+      
+      const btn = document.querySelector('#registerForm .form-btn');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner" style="display:inline-block;width:12px;height:12px;border-width:1.5px;margin-right:8px;vertical-align:middle;"></span> Creating Account...`;
+
       try {
         const r = await fetch(`${API}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         const d = await r.json();
-        if (!r.ok) return showMsg(d.error || 'Registration failed', 'error');
+        if (!r.ok) {
+          btn.disabled = false;
+          btn.textContent = originalText;
+          return showMsg(d.error || 'Registration failed', 'error');
+        }
         showMsg('Account created! Please sign in.', 'success');
         authTab('login');
         document.getElementById('lEmail').value = body.email;
-      } catch { showMsg('Cannot connect to server. Is it running on port 3000?', 'error'); }
+      } catch {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        showMsg('Cannot connect to server. Is it running on port 3000?', 'error');
+      }
     }
 
     // ─── LOGIN ────────────────────────────────────────────────────
@@ -2135,16 +2158,30 @@
       const email = document.getElementById('lEmail').value.trim();
       const password = document.getElementById('lPass').value;
       if (!email || !password) return showMsg('Email and password required', 'error');
+
+      const btn = document.querySelector('#loginForm .form-btn');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner" style="display:inline-block;width:12px;height:12px;border-width:1.5px;margin-right:8px;vertical-align:middle;"></span> Signing in...`;
+
       try {
         const r = await fetch(`${API}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
         const d = await r.json();
-        if (!r.ok) return showMsg(d.error || 'Login failed', 'error');
+        if (!r.ok) {
+          btn.disabled = false;
+          btn.textContent = originalText;
+          return showMsg(d.error || 'Login failed', 'error');
+        }
         TOKEN = d.accessToken;
         USER = d.user;
         localStorage.setItem('sq_token', TOKEN);
         localStorage.setItem('sq_user', JSON.stringify(USER));
         showApp();
-      } catch { showMsg('Cannot connect to server. Is it running on port 3000?', 'error'); }
+      } catch {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        showMsg('Cannot connect to server. Is it running on port 3000?', 'error');
+      }
     }
 
     function doLogout() {

@@ -1,4 +1,9 @@
-const bcrypt = require('bcryptjs');
+let bcrypt;
+try {
+  bcrypt = require('bcrypt');
+} catch (e) {
+  bcrypt = require('bcryptjs');
+}
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 require('dotenv').config();
@@ -83,6 +88,26 @@ exports.login = async (req, res, next) => {
 
     if (!match) {
       return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // 🔥 Auto Hash Migration: If the stored hash uses more than BCRYPT_ROUNDS (8), re-hash it with 8 rounds to make future logins super-fast!
+    const hashParts = user.password_hash.split('$');
+    if (hashParts.length >= 4) {
+      const rounds = parseInt(hashParts[2], 10);
+      const targetRounds = parseInt(process.env.BCRYPT_ROUNDS) || 8;
+      if (rounds > targetRounds) {
+        bcrypt.hash(password, targetRounds).then(newHash => {
+          db.query('UPDATE users SET password_hash = ? WHERE id = ?', [newHash, user.id])
+            .then(() => {
+              console.log(`[Hash Migration] Successfully upgraded user ID ${user.id} password hash from ${rounds} to ${targetRounds} rounds.`);
+            })
+            .catch(err => {
+              console.error('[Hash Migration] Failed to update password hash:', err);
+            });
+        }).catch(err => {
+          console.error('[Hash Migration] Failed to re-hash password:', err);
+        });
+      }
     }
 
     const accessToken = jwt.sign(

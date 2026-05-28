@@ -1,5 +1,10 @@
 const mysql = require('mysql2/promise');
-const bcrypt = require('bcryptjs');
+let bcrypt;
+try {
+  bcrypt = require('bcrypt');
+} catch (e) {
+  bcrypt = require('bcryptjs');
+}
 require('dotenv').config();
 
 async function seedAdmin() {
@@ -23,7 +28,7 @@ async function seedAdmin() {
     adminId = existing.id;
     console.log(`ℹ️  Admin user already exists (ID: ${adminId}). Skipping creation.`);
   } else {
-    const hash = await bcrypt.hash(adminPassword, 12);
+    const hash = await bcrypt.hash(adminPassword, parseInt(process.env.BCRYPT_ROUNDS) || 8);
     const [result] = await conn.query(
       `INSERT INTO users (email, password_hash, first_name, last_name, phone_number, date_of_birth, pan_number, is_active, is_verified)
        VALUES (?, ?, 'ShadowQuant', 'Admin', '9999999999', '1990-01-01', 'ADMIN1234A', 1, 1)`,
