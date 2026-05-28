@@ -546,6 +546,7 @@ function renderDashFromApps(apps, usersCount) {
       <td>${a.interest_rate||12}%</td>
       <td style="font-size:11px;color:var(--text3)">${fmtDate(a.created_at)}</td>
       <td><div style="display:flex;gap:6px">
+        ${(a.status==='APPLIED'||a.status==='PENDING') ? `<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;border-color:var(--amber);color:var(--amber)" onclick="markUnderReview(${a.id})">🔍 Review</button>` : ''}
         <button class="btn btn-approve" onclick="openApprove(${a.id},${a.requested_amount},${a.tenure_months},${a.interest_rate||12},'${a.purpose||''}')">✅ Approve</button>
         <button class="btn btn-reject" onclick="openReject(${a.id},'${a.purpose||''}')">❌ Reject</button>
       </div></td>
@@ -633,7 +634,8 @@ function renderAppsLedger() {
         <td>${badge(a.status)}</td>
         <td style="font-size:11px;color:var(--text3)">${fmtDate(a.created_at)}</td>
         <td><div style="display:flex;gap:6px">
-          ${(a.status==='APPLIED'||a.status==='UNDER_REVIEW') ? `
+          ${(a.status==='APPLIED'||a.status==='UNDER_REVIEW'||a.status==='PENDING') ? `
+            ${(a.status==='APPLIED'||a.status==='PENDING') ? `<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;border-color:var(--amber);color:var(--amber)" onclick="markUnderReview(${a.id})">🔍</button>` : ''}
             <button class="btn btn-approve" onclick="openApprove(${a.id},${a.requested_amount},${a.tenure_months},${a.interest_rate||12},'${a.purpose||''}')">✅</button>
             <button class="btn btn-reject" onclick="openReject(${a.id},'${a.purpose||''}')">❌</button>
           ` : `<span style="font-size:12px;color:var(--text3)">—</span>`}
@@ -745,17 +747,30 @@ function renderLoansLedger() {
   el.innerHTML = `
     <input type="text" id="loansSearchInput" placeholder="Search by borrower, purpose or Loan ID..." value="${loansSearchQuery}" oninput="debounceSearchLoans(this.value)" class="form-input" style="margin: 16px; font-size:12px; padding:8px 12px; width: 320px;" />
     
-    <div style="min-height: 230px;"><table class="tbl"><thead><tr><th>Loan ID</th><th>Borrower</th><th>Principal</th><th>Outstanding</th><th>Rate</th><th>Tenure</th><th>Status</th><th>Created</th></tr></thead>
-      <tbody>${pageItems.map(l=>`<tr>
-        <td><span style="font-family:'DM Mono',monospace;color:var(--gold)">#${l.id}</span></td>
-        <td style="font-size:12px">${l.first_name||''} ${l.last_name||''}</td>
-        <td style="font-family:'DM Mono',monospace">₹${parseFloat(l.principal_amount||0).toLocaleString('en-IN')}</td>
-        <td style="font-family:'DM Mono',monospace;color:var(--amber)">₹${parseFloat(l.outstanding_principal||0).toLocaleString('en-IN')}</td>
-        <td>${l.interest_rate}%</td>
-        <td>${l.tenure_months} mo</td>
-        <td>${badge(l.status)}</td>
-        <td style="font-size:11px;color:var(--text3)">${fmtDate(l.created_at)}</td>
-      </tr>`).join('')}
+    <div style="min-height: 230px;"><table class="tbl"><thead><tr><th>Loan ID</th><th>Borrower</th><th>Principal</th><th>Outstanding</th><th>Rate</th><th>Tenure</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+      <tbody>${pageItems.map(l=>{
+        const payable = l.total_payable !== null && l.total_payable !== undefined ? parseFloat(l.total_payable) : null;
+        const paidAmt = l.amount_paid !== null && l.amount_paid !== undefined ? parseFloat(l.amount_paid) : null;
+        const trueOutstanding = (payable !== null && paidAmt !== null) ? Math.max(0, payable - paidAmt) : parseFloat(l.outstanding_principal || 0);
+        return `<tr>
+          <td><span style="font-family:'DM Mono',monospace;color:var(--gold)">${l.loan_reference || '#' + l.id}</span></td>
+          <td style="font-size:12px">${l.first_name||''} ${l.last_name||''}</td>
+          <td style="font-family:'DM Mono',monospace">₹${parseFloat(l.principal_amount||0).toLocaleString('en-IN')}</td>
+          <td style="font-family:'DM Mono',monospace;color:var(--amber)">₹${trueOutstanding.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+          <td>${l.interest_rate}%</td>
+          <td>${l.tenure_months} mo</td>
+          <td>${badge(l.status)}</td>
+          <td style="font-size:11px;color:var(--text3)">${fmtDate(l.created_at)}</td>
+          <td><div style="display:flex;gap:6px">
+            ${l.status === 'ACTIVE' ? `
+              <button class="btn btn-reject" style="padding:4px 8px;font-size:11px;" onclick="updateLoanStatus(${l.id}, 'default')">⚠️ Default</button>
+              <button class="btn btn-reject" style="padding:4px 8px;font-size:11px;background-color:rgba(239,68,68,0.25);border-color:var(--red)" onclick="updateLoanStatus(${l.id}, 'npa')">🔴 NPA</button>
+            ` : (l.status === 'DEFAULTED' || l.status === 'NPA') ? `
+              <button class="btn btn-approve" style="padding:4px 8px;font-size:11px;" onclick="updateLoanStatus(${l.id}, 'active')">✓ Restor</button>
+            ` : `<span style="font-size:12px;color:var(--text3)">—</span>`}
+          </div></td>
+        </tr>`;
+      }).join('')}
     </tbody></table></div>
 
     <!-- Pagination controls -->
@@ -1028,6 +1043,32 @@ async function submitRejection() {
   } else toast(r?.data?.error||'Rejection failed', 'error');
 }
 
+async function markUnderReview(id) {
+  const r = await api(`/admin/applications/${id}/under-review`, 'POST');
+  if (r?.ok) {
+    toast('Application marked as Under Review', 'success');
+    loadDashboard();
+    if (document.getElementById('page-applications').classList.contains('active')) {
+      loadApplications(true);
+    }
+  } else {
+    toast(r?.data?.error || 'Action failed', 'error');
+  }
+}
+
+async function updateLoanStatus(id, action) {
+  const r = await api(`/admin/loans/${id}/${action}`, 'POST');
+  if (r?.ok) {
+    toast(`Loan status updated successfully!`, 'success');
+    loadDashboard();
+    if (document.getElementById('page-activeloans').classList.contains('active')) {
+      loadActiveLoans(true);
+    }
+  } else {
+    toast(r?.data?.error || 'Action failed', 'error');
+  }
+}
+
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 // ── HELPERS ────────────────────────────────────────────────────
@@ -1059,7 +1100,7 @@ function updateConnectionPulse(isOnline) {
 }
 
 function badge(s) {
-  const map = {APPLIED:'badge-blue',UNDER_REVIEW:'badge-amber',APPROVED:'badge-gold',ACTIVE:'badge-green',CLOSED:'badge-gray',DEFAULTED:'badge-red',REJECTED:'badge-red',FORECLOSED:'badge-gray'};
+  const map = {APPLIED:'badge-blue',UNDER_REVIEW:'badge-amber',APPROVED:'badge-gold',ACTIVE:'badge-green',CLOSED:'badge-gray',DEFAULTED:'badge-red',NPA:'badge-red',REJECTED:'badge-red',FORECLOSED:'badge-gray'};
   return `<span class="badge ${map[s]||'badge-gray'}">${s||'—'}</span>`;
 }
 function fmtDate(d) {

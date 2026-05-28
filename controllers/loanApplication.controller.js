@@ -2,13 +2,13 @@ const db = require('../config/db');
 
 exports.apply = async (req, res, next) => {
   try {
-    const { requested_amount, tenure_months, purpose, interest_rate } = req.body;
+    const { requested_amount, tenure_months, purpose, interest_rate, loan_type } = req.body;
     if (!requested_amount || !tenure_months || !purpose)
       return res.status(400).json({ error: 'Amount, tenure and purpose are required' });
 
     const [result] = await db.query(
-      'INSERT INTO loan_applications (user_id, requested_amount, tenure_months, purpose, interest_rate, status) VALUES (?,?,?,?,?,?)',
-      [req.user.id, requested_amount, tenure_months, purpose, interest_rate || 12, 'APPLIED']
+      'INSERT INTO loan_applications (user_id, loan_type, requested_amount, tenure_months, purpose, interest_rate, status) VALUES (?,?,?,?,?,?,?)',
+      [req.user.id, loan_type || 'PERSONAL', requested_amount, tenure_months, purpose, interest_rate || 12, 'APPLIED']
     );
     res.status(201).json({ message: 'Application submitted successfully', applicationId: result.insertId });
   } catch (err) { next(err); }

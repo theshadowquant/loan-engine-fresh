@@ -1839,19 +1839,29 @@
                   <div class="card-title">Loan Details</div>
                 </div>
                 <div class="card-body">
+                  <div class="form-group">
+                    <label class="form-label">Loan Type</label>
+                    <select class="form-input" id="apType" onchange="onLoanTypeChange(this.value)">
+                      <option value="PERSONAL">Personal Loan (12% p.a., up to 60 mo)</option>
+                      <option value="HOME">Home Loan (8.5% p.a., up to 360 mo)</option>
+                      <option value="CAR">Car Loan (9.5% p.a., up to 84 mo)</option>
+                      <option value="EDUCATION">Education Loan (10.0% p.a., up to 120 mo)</option>
+                      <option value="BUSINESS">Business Loan (14% p.a., up to 60 mo)</option>
+                    </select>
+                  </div>
                   <div class="form-group"><label class="form-label">Purpose</label><input class="form-input"
                       id="apPurpose" placeholder="e.g. Home Renovation, Education, Medical..." oninput="calcEMI()">
                   </div>
                   <div class="form-group"><label class="form-label">Amount (₹)</label><input class="form-input"
                       type="number" id="apAmount" placeholder="e.g. 100000" oninput="calcEMI()"></div>
                   <div class="form-group">
-                    <label class="form-label">Tenure — <span id="tenureLabel" style="color:var(--gold)">12
+                    <label class="form-label">Tenure — <span id="tenureLabel" style="color:var(--gold)">24
                         months</span></label>
-                    <input type="range" style="width:100%;accent-color:var(--gold);margin:8px 0" id="apTenure" min="3"
-                      max="84" value="12"
+                    <input type="range" style="width:100%;accent-color:var(--gold);margin:8px 0" id="apTenure" min="12"
+                      max="60" value="24"
                       oninput="document.getElementById('tenureLabel').textContent=this.value+' months';calcEMI()">
-                    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)"><span>3
-                        mo</span><span>84 mo</span></div>
+                    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)"><span id="minTenureSpan">12
+                        mo</span><span id="maxTenureSpan">60 mo</span></div>
                   </div>
                   <div class="form-group"><label class="form-label">Interest Rate (% p.a.)</label><input
                       class="form-input" type="number" id="apRate" value="12" step="0.1" oninput="calcEMI()"></div>
@@ -1893,8 +1903,13 @@
                   <div class="card-title">Payment Details</div>
                 </div>
                 <div class="card-body">
-                  <div class="form-group"><label class="form-label">Loan ID</label><input class="form-input" type="number"
-                      id="payLoanId" placeholder="Enter your Loan ID" oninput="fetchLoanInfo()"></div>
+                  <div class="form-group">
+                    <label class="form-label">Select Loan Account</label>
+                    <select class="form-input" id="payLoanSelector" onchange="selectPaymentLoan(this.value)">
+                      <option value="">-- Loading Active Loans... --</option>
+                    </select>
+                    <input type="hidden" id="payLoanId" />
+                  </div>
                   <div id="payLoanInfo"></div>
                   <div class="form-group"><label class="form-label">Amount (₹)</label><input class="form-input"
                       type="number" id="payAmount" placeholder="Enter amount"></div>
@@ -1981,6 +1996,42 @@
     let USER = JSON.parse(localStorage.getItem('sq_user') || 'null');
     let CURRENT_PAYMENTS = [];
     let pollingInterval = null;
+
+    // ─── LOAN APPLY PARAMETERS ──────────────────────────────────
+    function onLoanTypeChange(type) {
+      const tenureSlider = document.getElementById('apTenure');
+      const tenureLabel = document.getElementById('tenureLabel');
+      const rateInput = document.getElementById('apRate');
+      const minTenureSpan = document.getElementById('minTenureSpan');
+      const maxTenureSpan = document.getElementById('maxTenureSpan');
+
+      let min = 12, max = 60, val = 24, rate = 12.0;
+      if (type === 'HOME') {
+        min = 60; max = 360; val = 180; rate = 8.5;
+      } else if (type === 'CAR') {
+        min = 12; max = 84; val = 36; rate = 9.5;
+      } else if (type === 'EDUCATION') {
+        min = 24; max = 120; val = 60; rate = 10.0;
+      } else if (type === 'BUSINESS') {
+        min = 12; max = 60; val = 24; rate = 14.0;
+      }
+
+      tenureSlider.min = min;
+      tenureSlider.max = max;
+      tenureSlider.value = val;
+      tenureLabel.textContent = val + ' months';
+      minTenureSpan.textContent = min + ' mo';
+      maxTenureSpan.textContent = max + ' mo';
+      rateInput.value = rate;
+
+      calcEMI();
+    }
+
+    // ─── ACTIVE LOAN PAYMENT SELECTOR ───────────────────────────
+    function selectPaymentLoan(val) {
+      document.getElementById('payLoanId').value = val;
+      fetchLoanInfo();
+    }
 
     // ─── THEME ────────────────────────────────────────────────────
     function toggleTheme() {
@@ -2195,7 +2246,13 @@
         
         for (const loan of activeLoans) {
           totalBorrowed += parseFloat(loan.principal_amount || 0);
-          outstanding += parseFloat(loan.outstanding_principal || 0);
+          if (loan.total_payable !== undefined && loan.total_payable !== null) {
+            const payable = parseFloat(loan.total_payable || 0);
+            const paidAmt = parseFloat(loan.amount_paid || 0);
+            outstanding += Math.max(0, payable - paidAmt);
+          } else {
+            outstanding += parseFloat(loan.outstanding_principal || 0);
+          }
           
           const rEmi = await api('/loans/' + loan.id + '/emi-schedule');
           if (rEmi?.ok) {
@@ -2363,6 +2420,7 @@
     async function doApply() {
       const body = {
         purpose: document.getElementById('apPurpose').value.trim(),
+        loan_type: document.getElementById('apType').value,
         requested_amount: parseFloat(document.getElementById('apAmount').value),
         tenure_months: parseInt(document.getElementById('apTenure').value),
         interest_rate: parseFloat(document.getElementById('apRate').value),
@@ -2382,7 +2440,7 @@
       if (r?.ok && r.data?.loan) {
         const l = r.data.loan;
         el.innerHTML = `<div class="pay-info">
-      <div class="pay-id">LOAN #${l.id}</div>
+      <div class="pay-id">LOAN ${l.loan_reference || '#' + l.id}</div>
       <div class="pay-name">${l.purpose || 'Personal Loan'}</div>
       <div class="pay-meta">
         <div class="pay-meta-item">Outstanding<span class="pay-meta-val">₹${parseFloat(l.outstanding_principal || 0).toLocaleString('en-IN')}</span></div>
@@ -2449,7 +2507,7 @@
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span style="font-size:14px;color:var(--text3);font-weight:600">Select Loan:</span>
         <select id="emiLoanSelector" class="form-input" style="width:auto;min-width:260px;padding:6px 32px 6px 12px;background:var(--bg2) url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23b5945b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E') no-repeat scroll right 12px center/8px auto;border-color:var(--gold-dim);color:var(--text);font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;-webkit-appearance:none;-moz-appearance:none;appearance:none;" onchange="loadMyEMI(false, this.value)">
-          ${loans.map(l => `<option value="${l.id}" ${l.id === loan.id ? 'selected' : ''}>Loan #${l.id} - ${l.purpose || 'Personal Loan'} (₹${parseFloat(l.principal_amount || 0).toLocaleString('en-IN')})</option>`).join('')}
+          ${loans.map(l => `<option value="${l.id}" ${l.id === loan.id ? 'selected' : ''}>Loan ${l.loan_reference || '#' + l.id} - ${l.purpose || 'Personal Loan'} (₹${parseFloat(l.principal_amount || 0).toLocaleString('en-IN')})</option>`).join('')}
         </select>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
@@ -2558,7 +2616,7 @@
     }
 
     function badge(s) {
-      const map = { APPLIED: 'badge-blue', UNDER_REVIEW: 'badge-amber', APPROVED: 'badge-gold', ACTIVE: 'badge-green', CLOSED: 'badge-gray', DEFAULTED: 'badge-red', REJECTED: 'badge-red', FORECLOSED: 'badge-gray', PENDING: 'badge-blue', PAID: 'badge-green', PARTIALLY_PAID: 'badge-amber', OVERDUE: 'badge-red', WAIVED: 'badge-gray' };
+      const map = { APPLIED: 'badge-blue', UNDER_REVIEW: 'badge-amber', APPROVED: 'badge-gold', ACTIVE: 'badge-green', CLOSED: 'badge-gray', DEFAULTED: 'badge-red', NPA: 'badge-red', REJECTED: 'badge-red', FORECLOSED: 'badge-gray', PENDING: 'badge-blue', PAID: 'badge-green', PARTIALLY_PAID: 'badge-amber', OVERDUE: 'badge-red', WAIVED: 'badge-gray' };
       return `<span class="badge ${map[s] || 'badge-gray'}">${s || '—'}</span>`;
     }
     function fmtDate(d) {
@@ -2584,6 +2642,22 @@
     async function loadPaymentHistory(silent = false) {
       const el = document.getElementById('paymentsHistoryBody');
       if (!silent) el.innerHTML = getSkeletonLoader(4);
+
+      // Load and populate the Active Loans dropdown in Payments Detail panel
+      const loansRes = await api('/loans');
+      const paySelect = document.getElementById('payLoanSelector');
+      if (paySelect && loansRes?.ok) {
+        const activeLoans = (loansRes.data.loans || []).filter(l => l.status === 'ACTIVE');
+        if (activeLoans.length === 0) {
+          paySelect.innerHTML = `<option value="">No active loans found</option>`;
+        } else {
+          // Keep the previous selection if one exists
+          const prevVal = paySelect.value;
+          paySelect.innerHTML = `<option value="">-- Select Active Loan --</option>` +
+            activeLoans.map(l => `<option value="${l.id}" ${String(l.id) === String(prevVal) ? 'selected' : ''}>Loan ${l.loan_reference || '#' + l.id} - ${l.purpose || 'Personal Loan'} (Outstanding: ₹${parseFloat(l.outstanding_principal || 0).toLocaleString('en-IN')})</option>`).join('');
+        }
+      }
+
       const r = await api('/payments');
       if (!r?.ok) {
         el.innerHTML = `<div class="empty"><div class="empty-title">Failed to load payment history</div></div>`;
@@ -2591,7 +2665,10 @@
       }
       const payments = r.data.payments || [];
       if (!payments.length) {
-        el.innerHTML = `<div class="empty"><div class="empty-icon">💰</div><div class="empty-title">No payments recorded</div><div class="empty-sub">Your payment history will appear here.</div></div>`;
+        el.innerHTML = `
+          <input type="text" id="paySearchInput" placeholder="Search by UTR or Loan ID..." value="${paymentSearchQuery}" oninput="debounceSearchPayments(this.value)" class="form-input" style="margin-bottom:12px; font-size:12px; padding:8px 12px;" />
+          <div class="empty"><div class="empty-icon">💰</div><div class="empty-title">No payments recorded</div><div class="empty-sub">Your payment history will appear here.</div></div>
+        `;
         return;
       }
       
@@ -2615,6 +2692,7 @@
       const filtered = CURRENT_PAYMENTS.filter(p => 
         p.transaction_reference.toLowerCase().includes(paymentSearchQuery) || 
         String(p.loan_id).includes(paymentSearchQuery) ||
+        (p.loan_reference || '').toLowerCase().includes(paymentSearchQuery) ||
         p.payment_mode.toLowerCase().includes(paymentSearchQuery)
       );
 
@@ -2645,7 +2723,7 @@
             const origIndex = CURRENT_PAYMENTS.findIndex(orig => orig.id === p.id);
             return `<tr>
               <td><span style="font-family:'DM Mono',monospace;color:var(--gold)">${p.transaction_reference}</span></td>
-              <td style="font-family:'DM Mono',monospace">#${p.loan_id}</td>
+              <td style="font-family:'DM Mono',monospace">${p.loan_reference || '#' + p.loan_id}</td>
               <td style="font-family:'DM Mono',monospace;font-weight:600">₹${parseFloat(p.amount_paid).toLocaleString('en-IN')}</td>
               <td><span class="badge badge-gray">${p.payment_mode}</span></td>
               <td style="font-size:11px;color:var(--text3)">${fmtDate(p.payment_date)}</td>
@@ -2684,6 +2762,7 @@
       const filteredCount = CURRENT_PAYMENTS.filter(p => 
         p.transaction_reference.toLowerCase().includes(paymentSearchQuery) || 
         String(p.loan_id).includes(paymentSearchQuery) ||
+        (p.loan_reference || '').toLowerCase().includes(paymentSearchQuery) ||
         p.payment_mode.toLowerCase().includes(paymentSearchQuery)
       ).length;
       const maxPages = Math.ceil(filteredCount / PAYMENTS_PER_PAGE);
@@ -2758,7 +2837,7 @@
             <tr>
               <td style="font-weight: 500;">
                 EMI Installment Repayment<br>
-                <span style="font-size: 11px; color: var(--text3); font-weight: normal;">Accounted toward Loan Account ID: #${p.loan_id}</span>
+                <span style="font-size: 11px; color: var(--text3); font-weight: normal;">Accounted toward Loan Account: ${p.loan_reference || '#' + p.loan_id}</span>
               </td>
               <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--gold);">${p.transaction_reference}</td>
               <td style="text-align: right; font-family: 'JetBrains Mono', monospace;">${p.payment_mode}</td>

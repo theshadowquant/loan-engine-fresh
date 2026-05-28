@@ -3,7 +3,11 @@ const db = require('../config/db');
 exports.getAll = async (req, res, next) => {
   try {
     const [rows] = await db.query(
-      'SELECT * FROM loans WHERE user_id = ? ORDER BY id DESC',
+      `SELECT l.*, ls.total_principal, ls.total_interest, ls.total_payable, ls.amount_paid, ls.outstanding_principal as summary_outstanding_principal
+       FROM loans l
+       LEFT JOIN loan_summary ls ON l.id = ls.loan_id
+       WHERE l.user_id = ? 
+       ORDER BY l.id DESC`,
       [req.user.id]
     );
     res.json({ loans: rows });
@@ -13,7 +17,10 @@ exports.getAll = async (req, res, next) => {
 exports.getOne = async (req, res, next) => {
   try {
     const [[row]] = await db.query(
-      'SELECT * FROM loans WHERE id = ? AND user_id = ?',
+      `SELECT l.*, ls.total_principal, ls.total_interest, ls.total_payable, ls.amount_paid, ls.outstanding_principal as summary_outstanding_principal
+       FROM loans l
+       LEFT JOIN loan_summary ls ON l.id = ls.loan_id
+       WHERE l.id = ? AND l.user_id = ?`,
       [req.params.id, req.user.id]
     );
     if (!row) return res.status(404).json({ error: 'Loan not found' });

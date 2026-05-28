@@ -41,13 +41,39 @@ exports.makePayment = async (req, res, next) => {
         "UPDATE emi_schedule SET status = 'PAID' WHERE id = ?",
         [nextEMI.id]
       );
-    }
 
-    // Reduce outstanding by the actual amount paid
-    await db.query(
-      'UPDATE loans SET outstanding_principal = GREATEST(0, outstanding_principal - ?) WHERE id = ?',
-      [parseFloat(amount), loanId]
-    );
+      const principalPaid = parseFloat(nextEMI.principal_component || 0);
+      const totalPaidAmount = parseFloat(amount || 0);
+
+      // Reduce outstanding_principal in loans table by the principal component of the EMI
+      await db.query(
+        'UPDATE loans SET outstanding_principal = GREATEST(0, outstanding_principal - ?) WHERE id = ?',
+        [principalPaid, loanId]
+      );
+
+      // Update loan_summary table: add to amount_paid, reduce outstanding_principal
+      await db.query(
+        `UPDATE loan_summary 
+         SET amount_paid = amount_paid + ?, 
+             outstanding_principal = GREATEST(0, outstanding_principal - ?) 
+         WHERE loan_id = ?`,
+        [totalPaidAmount, principalPaid, loanId]
+      );
+    } else {
+      // Fallback: if there are no pending EMIs but they still pay
+      const totalPaidAmount = parseFloat(amount || 0);
+      await db.query(
+        'UPDATE loans SET outstanding_principal = GREATEST(0, outstanding_principal - ?) WHERE id = ?',
+        [totalPaidAmount, loanId]
+      );
+      await db.query(
+        `UPDATE loan_summary 
+         SET amount_paid = amount_paid + ?, 
+             outstanding_principal = GREATEST(0, outstanding_principal - ?) 
+         WHERE loan_id = ?`,
+        [totalPaidAmount, totalPaidAmount, loanId]
+      );
+    }
 
     // If no more PENDING EMIs, close the loan
     if (nextEMI) {
@@ -60,6 +86,10 @@ exports.makePayment = async (req, res, next) => {
           "UPDATE loans SET status = 'CLOSED', outstanding_principal = 0 WHERE id = ?",
           [loanId]
         );
+        await db.query(
+          "UPDATE loan_summary SET outstanding_principal = 0 WHERE loan_id = ?",
+          [loanId]
+        );
       }
     }
 
@@ -70,7 +100,11 @@ exports.makePayment = async (req, res, next) => {
 exports.getUserPayments = async (req, res, next) => {
   try {
     const [rows] = await db.query(
-      'SELECT * FROM payments WHERE user_id = ? ORDER BY payment_date DESC',
+      `SELECT p.*, l.loan_reference 
+       FROM payments p
+       LEFT JOIN loans l ON p.loan_id = l.id
+       WHERE p.user_id = ? 
+       ORDER BY p.payment_date DESC`,
       [req.user.id]
     );
     res.json({ payments: rows });

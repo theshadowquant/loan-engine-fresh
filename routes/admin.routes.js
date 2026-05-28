@@ -44,16 +44,22 @@ router.post('/applications/:id/approve', adminAuth, async (req, res, next) => {
     const onePlusRpowN = onePlusR.pow(n);
     const emi = P.mul(r).mul(onePlusRpowN).div(onePlusRpowN.minus(1)).toDecimalPlaces(2);
 
-    // Create loan reference
-    const loanRef = 'LN' + Date.now();
+    // Create placeholder loan reference, updated with format immediately after insertion
+    const tempLoanRef = 'TEMP' + Date.now();
 
-    // Create loan
+    // Create loan (saves loan_type)
     const [loanResult] = await conn.query(`
-      INSERT INTO loans (user_id, loan_reference, principal_amount, interest_rate, tenure_months, emi_amount_at_origination, outstanding_principal, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'ACTIVE')
-    `, [app.user_id, loanRef, approved_amount, interest_rate, tenure_months, emi.toString(), approved_amount]);
+      INSERT INTO loans (user_id, loan_reference, loan_type, principal_amount, interest_rate, tenure_months, emi_amount_at_origination, outstanding_principal, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')
+    `, [app.user_id, tempLoanRef, app.loan_type || 'PERSONAL', approved_amount, interest_rate, tenure_months, emi.toString(), approved_amount]);
 
     const loanId = loanResult.insertId;
+
+    // Formatted Loan Reference: LN-YYYY-XXXXX
+    const formattedLoanRef = `LN-${new Date().getFullYear()}-${String(loanId).padStart(5, '0')}`;
+    
+    // Update loan_reference in database
+    await conn.query('UPDATE loans SET loan_reference = ? WHERE id = ?', [formattedLoanRef, loanId]);
 
     // Generate EMI schedule
     let balance = P;
@@ -86,11 +92,11 @@ router.post('/applications/:id/approve', adminAuth, async (req, res, next) => {
     // Notify user
     await conn.query(
       `INSERT INTO notifications (user_id, type, message, is_read) VALUES (?, 'LOAN_APPROVED', ?, 0)`,
-      [app.user_id, `Your loan application #${appId} has been approved! Loan ID: #${loanId}. EMI: ₹${emi.toString()}/month.`]
+      [app.user_id, `Your loan application #${appId} has been approved! Loan ID: ${formattedLoanRef}. EMI: ₹${emi.toString()}/month.`]
     );
 
     await conn.commit();
-    res.json({ message: 'Loan approved successfully', loanId, emi: emi.toString() });
+    res.json({ message: 'Loan approved successfully', loanId, loanReference: formattedLoanRef, emi: emi.toString() });
   } catch (err) { await conn.rollback(); next(err); }
   finally { conn.release(); }
 });
@@ -120,9 +126,11 @@ router.post('/applications/:id/reject', adminAuth, async (req, res, next) => {
 router.get('/loans', adminAuth, async (req, res, next) => {
   try {
     const [rows] = await db.query(`
-      SELECT l.*, u.first_name, u.last_name, u.email
+      SELECT l.*, ls.total_principal, ls.total_interest, ls.total_payable, ls.amount_paid,
+             u.first_name, u.last_name, u.email
       FROM loans l
       LEFT JOIN users u ON l.user_id = u.id
+      LEFT JOIN loan_summary ls ON l.id = ls.loan_id
       ORDER BY l.id DESC
     `);
     res.json({ loans: rows });
@@ -160,6 +168,85 @@ router.patch('/users/:id/verify', adminAuth, async (req, res, next) => {
     );
 
     res.json({ message: `User ${verified ? 'verified' : 'unverified'} successfully`, is_verified: verified });
+  } catch (err) { next(err); }
+});
+
+// ── MARK APPLICATION AS UNDER REVIEW (Admin) ──────────────────
+router.post('/applications/:id/under-review', adminAuth, async (req, res, next) => {
+  try {
+    const appId = req.params.id;
+    const [[app]] = await db.query('SELECT * FROM loan_applications WHERE id = ?', [appId]);
+    if (!app) return res.status(404).json({ error: 'Application not found' });
+
+    await db.query(
+      `UPDATE loan_applications SET status = 'UNDER_REVIEW', reviewed_by = ? WHERE id = ?`,
+      [req.user.id, appId]
+    );
+
+    // Notify user
+    await db.query(
+      `INSERT INTO notifications (user_id, type, message, is_read) VALUES (?, 'SYSTEM', ?, 0)`,
+      [app.user_id, `Your loan application #${appId} is now under review.`]
+    );
+
+    res.json({ message: 'Application status updated to Under Review' });
+  } catch (err) { next(err); }
+});
+
+// ── MARK LOAN AS DEFAULTED (Admin) ────────────────────────────
+router.post('/loans/:id/default', adminAuth, async (req, res, next) => {
+  try {
+    const loanId = req.params.id;
+    const [[loan]] = await db.query('SELECT * FROM loans WHERE id = ?', [loanId]);
+    if (!loan) return res.status(404).json({ error: 'Loan not found' });
+
+    await db.query(`UPDATE loans SET status = 'DEFAULTED' WHERE id = ?`, [loanId]);
+
+    // Notify user
+    await db.query(
+      `INSERT INTO notifications (user_id, type, message, is_read) VALUES (?, 'OVERDUE', ?, 0)`,
+      [loan.user_id, `⚠️ CRITICAL: Your loan ${loan.loan_reference || '#' + loanId} has been marked as DEFAULTED due to non-payment. Please contact support immediately.`]
+    );
+
+    res.json({ message: 'Loan status updated to DEFAULTED' });
+  } catch (err) { next(err); }
+});
+
+// ── MARK LOAN AS NPA (Admin) ──────────────────────────────────
+router.post('/loans/:id/npa', adminAuth, async (req, res, next) => {
+  try {
+    const loanId = req.params.id;
+    const [[loan]] = await db.query('SELECT * FROM loans WHERE id = ?', [loanId]);
+    if (!loan) return res.status(404).json({ error: 'Loan not found' });
+
+    await db.query(`UPDATE loans SET status = 'NPA' WHERE id = ?`, [loanId]);
+
+    // Notify user
+    await db.query(
+      `INSERT INTO notifications (user_id, type, message, is_read) VALUES (?, 'OVERDUE', ?, 0)`,
+      [loan.user_id, `🚨 WARNING: Your loan ${loan.loan_reference || '#' + loanId} has been classified as an NPA (Non-Performing Asset) by our auditing systems.`]
+    );
+
+    res.json({ message: 'Loan status updated to NPA' });
+  } catch (err) { next(err); }
+});
+
+// ── RESTORE LOAN TO ACTIVE (Admin) ────────────────────────────
+router.post('/loans/:id/active', adminAuth, async (req, res, next) => {
+  try {
+    const loanId = req.params.id;
+    const [[loan]] = await db.query('SELECT * FROM loans WHERE id = ?', [loanId]);
+    if (!loan) return res.status(404).json({ error: 'Loan not found' });
+
+    await db.query(`UPDATE loans SET status = 'ACTIVE' WHERE id = ?`, [loanId]);
+
+    // Notify user
+    await db.query(
+      `INSERT INTO notifications (user_id, type, message, is_read) VALUES (?, 'SYSTEM', ?, 0)`,
+      [loan.user_id, `Your loan ${loan.loan_reference || '#' + loanId} has been successfully restored to ACTIVE status.`]
+    );
+
+    res.json({ message: 'Loan status updated to ACTIVE' });
   } catch (err) { next(err); }
 });
 
