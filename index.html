@@ -1215,6 +1215,321 @@
     @keyframes shimmerLoading {
       to { background-position: -200% 0; }
     }
+
+    /* ═══════════════════════════════════════════
+       MOBILE HAMBURGER BUTTON
+    ═══════════════════════════════════════════ */
+    .mob-hamburger {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      width: 40px;
+      height: 40px;
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+      padding: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      transition: background .15s;
+    }
+    .mob-hamburger:hover { background: var(--surface); }
+    .mob-hamburger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: all .25s;
+    }
+    .mob-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .mob-hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .mob-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Sidebar overlay backdrop */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(4px);
+      z-index: 99;
+      opacity: 0;
+      transition: opacity .25s;
+    }
+    .sidebar-overlay.visible {
+      opacity: 1;
+    }
+
+    /* ═══════════════════════════════════════════
+       MOBILE BOTTOM NAV BAR
+    ═══════════════════════════════════════════ */
+    .mob-bottomnav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 150;
+      background: var(--bg2);
+      border-top: 1px solid var(--border2);
+      padding: 6px 4px calc(env(safe-area-inset-bottom) + 6px);
+      justify-content: space-around;
+      align-items: center;
+    }
+    .mob-bottomnav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all .15s;
+      min-width: 52px;
+    }
+    .mob-bottomnav-item .mob-nav-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+    .mob-bottomnav-item .mob-nav-label {
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--text3);
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    .mob-bottomnav-item.active .mob-nav-label {
+      color: var(--gold);
+    }
+    .mob-bottomnav-item.active .mob-nav-icon {
+      filter: drop-shadow(0 0 4px var(--gold));
+    }
+    .mob-bottomnav-item:active {
+      background: var(--surface);
+    }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE — TABLET (max 900px)
+    ═══════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+    }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE — MOBILE (max 768px)
+    ═══════════════════════════════════════════ */
+    @media (max-width: 768px) {
+
+      /* Show hamburger and bottom nav */
+      .mob-hamburger { display: flex; }
+      .mob-bottomnav  { display: flex; }
+
+      /* Sidebar: off-canvas slide-in */
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform .28s cubic-bezier(.4,0,.2,1);
+        z-index: 120;
+        width: 260px;
+        box-shadow: 4px 0 32px rgba(0,0,0,0.5);
+      }
+      .sidebar.mob-open {
+        transform: translateX(0);
+      }
+      .sidebar-overlay {
+        display: block;
+      }
+
+      /* Main content: no sidebar offset, add bottom-nav padding */
+      .main {
+        margin-left: 0 !important;
+        padding-bottom: 74px;
+      }
+
+      /* Topbar: add left padding for hamburger */
+      .topbar {
+        padding: 0 14px 0 62px;
+        height: 58px;
+        gap: 8px;
+      }
+      .topbar-title {
+        font-size: 15px;
+      }
+      .topbar-right {
+        gap: 6px;
+      }
+      .live-label {
+        display: none;
+      }
+      /* Shrink topbar buttons */
+      .topbar .btn {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      .topbar .btn-ghost {
+        padding: 6px 8px;
+        font-size: 10px;
+      }
+
+      /* Content padding */
+      .content {
+        padding: 16px;
+      }
+
+      /* Page titles */
+      .page-title { font-size: 18px; }
+      .page-sub   { margin-bottom: 18px; }
+
+      /* Auth card full-width */
+      .auth-card {
+        padding: 28px 20px;
+        border-radius: 16px;
+        margin: 16px;
+      }
+
+      /* Stats grid: 2 columns on mobile */
+      .stats-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+      }
+      .stat { padding: 14px 14px; }
+      .stat-val { font-size: 20px !important; }
+
+      /* Dashboard hero KPI grid: single column stack */
+      #page-dashboard > div[style*="grid-template-columns: 1.5fr"] {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        height: auto !important;
+      }
+      #page-dashboard > div[style*="grid-template-columns: 1.5fr"] > div {
+        height: auto !important;
+      }
+      /* The two flex sub-columns become horizontal rows */
+      #page-dashboard > div[style*="grid-template-columns: 1.5fr"] > div[style*="flex-direction: column"] {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        height: auto !important;
+        gap: 10px !important;
+      }
+
+      /* Virtual credit card: full width */
+      .card-neon-wrap {
+        height: 180px !important;
+        width: 100% !important;
+      }
+
+      /* grid2: stack on mobile */
+      .grid2 {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
+
+      /* form-row: stack on very small screens */
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      /* EMI preview — not sticky on mobile */
+      .emi-preview {
+        position: static;
+        top: auto;
+      }
+
+      /* Tables: horizontal scroll */
+      .card { overflow-x: auto; }
+      .tbl {
+        min-width: 480px;
+        font-size: 12px;
+      }
+      .tbl th, .tbl td {
+        padding: 8px 10px;
+      }
+
+      /* Receipt modal: full screen on mobile */
+      .receipt-modal-overlay {
+        padding: 0;
+        align-items: flex-end;
+      }
+      .receipt-card {
+        border-radius: 20px 20px 0 0;
+        padding: 24px 18px;
+        max-width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .receipt-header-row {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
+      .receipt-meta-block { text-align: left !important; }
+      .receipt-payer-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
+      .receipt-summary-box {
+        width: 100% !important;
+        margin-left: 0 !important;
+      }
+      .receipt-actions {
+        grid-template-columns: 1fr !important;
+      }
+      .receipt-footer-seal-block {
+        flex-direction: column !important;
+        gap: 12px;
+        align-items: flex-start !important;
+      }
+
+      /* Toast: full width at bottom */
+      .toasts {
+        left: 12px;
+        right: 12px;
+        bottom: 80px;
+      }
+      .toast {
+        min-width: unset;
+        width: 100%;
+      }
+
+      /* Profile grid: single column */
+      .profile-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* Card title smaller */
+      .card-head { padding: 12px 16px; }
+      .card-body { padding: 14px 16px; }
+
+      /* Pagination: stack */
+      .no-print > div {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+      }
+    }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE — SMALL PHONES (max 420px)
+    ═══════════════════════════════════════════ */
+    @media (max-width: 420px) {
+      .stats-grid {
+        grid-template-columns: 1fr !important;
+      }
+      #page-dashboard > div[style*="grid-template-columns: 1.5fr"] > div[style*="flex-direction: column"] {
+        grid-template-columns: 1fr !important;
+      }
+      .topbar-title { font-size: 13px; }
+      .auth-card { margin: 8px; }
+      .card-neon-wrap { height: 160px !important; }
+    }
   </style>
 </head>
 
@@ -1266,6 +1581,14 @@
   </div>
 
   <!-- ═══ APP ═══ -->
+  <!-- Mobile hamburger button -->
+  <button class="mob-hamburger" id="mobHamburger" onclick="toggleMobileSidebar()" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- Sidebar backdrop overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
   <div id="appShell" class="app">
     <aside class="sidebar">
       <div class="logo-wrap" style="padding: 24px 20px; display: flex; flex-direction: column; gap: 4px;">
@@ -1310,6 +1633,30 @@
         </div>
       </div>
     </aside>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mob-bottomnav" id="mobBottomNav">
+      <div class="mob-bottomnav-item active" id="mbn-dashboard" onclick="goto('dashboard');setMobNav('dashboard')">
+        <span class="mob-nav-icon">⬡</span>
+        <span class="mob-nav-label">Home</span>
+      </div>
+      <div class="mob-bottomnav-item" id="mbn-loans" onclick="goto('loans');setMobNav('loans')">
+        <span class="mob-nav-icon">◈</span>
+        <span class="mob-nav-label">Loans</span>
+      </div>
+      <div class="mob-bottomnav-item" id="mbn-apply" onclick="goto('apply');setMobNav('apply')">
+        <span class="mob-nav-icon">＋</span>
+        <span class="mob-nav-label">Apply</span>
+      </div>
+      <div class="mob-bottomnav-item" id="mbn-payments" onclick="goto('payments');setMobNav('payments')">
+        <span class="mob-nav-icon">◎</span>
+        <span class="mob-nav-label">Pay</span>
+      </div>
+      <div class="mob-bottomnav-item" id="mbn-emi" onclick="goto('emi');setMobNav('emi')">
+        <span class="mob-nav-icon">≡</span>
+        <span class="mob-nav-label">EMI</span>
+      </div>
+    </nav>
 
     <div class="main">
       <div class="topbar">
@@ -1724,6 +2071,37 @@
       }
     }
 
+    // ─── MOBILE SIDEBAR TOGGLE ────────────────────────────────────
+    function toggleMobileSidebar() {
+      const sidebar  = document.querySelector('.sidebar');
+      const overlay  = document.getElementById('sidebarOverlay');
+      const hamburger = document.getElementById('mobHamburger');
+      const isOpen   = sidebar.classList.contains('mob-open');
+      if (isOpen) {
+        sidebar.classList.remove('mob-open');
+        overlay.classList.remove('visible');
+        hamburger.classList.remove('open');
+      } else {
+        sidebar.classList.add('mob-open');
+        overlay.classList.add('visible');
+        hamburger.classList.add('open');
+      }
+    }
+    function closeMobileSidebar() {
+      document.querySelector('.sidebar').classList.remove('mob-open');
+      document.getElementById('sidebarOverlay').classList.remove('visible');
+      document.getElementById('mobHamburger').classList.remove('open');
+    }
+
+    // ─── MOBILE BOTTOM NAV ACTIVE STATE ──────────────────────────
+    function setMobNav(page) {
+      const mapped = ['dashboard','loans','apply','payments','emi'];
+      mapped.forEach(p => {
+        const el = document.getElementById('mbn-' + p);
+        if (el) el.classList.toggle('active', p === page);
+      });
+    }
+
     // ─── NAVIGATION ───────────────────────────────────────────────
     const PAGE_TITLES = { dashboard: 'Dashboard', loans: 'My Loans', apply: 'Apply for Loan', payments: 'Payments', emi: 'EMI Schedule', notifications: 'Notifications', profile: 'Profile' };
     function goto(page) {
@@ -1739,6 +2117,12 @@
       if (page === 'emi') loadMyEMI();
       if (page === 'notifications') loadNotifications();
       if (page === 'profile') loadProfile();
+      // Close sidebar when navigating on mobile
+      closeMobileSidebar();
+      // Scroll content to top on page change
+      const content = document.querySelector('.content');
+      if (content) content.scrollTop = 0;
+      window.scrollTo(0, 0);
     }
 
     // ─── DASHBOARD ────────────────────────────────────────────────
