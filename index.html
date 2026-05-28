@@ -2246,13 +2246,7 @@
         
         for (const loan of activeLoans) {
           totalBorrowed += parseFloat(loan.principal_amount || 0);
-          if (loan.total_payable !== undefined && loan.total_payable !== null) {
-            const payable = parseFloat(loan.total_payable || 0);
-            const paidAmt = parseFloat(loan.amount_paid || 0);
-            outstanding += Math.max(0, payable - paidAmt);
-          } else {
-            outstanding += parseFloat(loan.outstanding_principal || 0);
-          }
+          outstanding += parseFloat(loan.outstanding_principal || 0);
           
           const rEmi = await api('/loans/' + loan.id + '/emi-schedule');
           if (rEmi?.ok) {
