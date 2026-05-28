@@ -139,4 +139,28 @@ router.get('/users', adminAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── VERIFY / UNVERIFY USER (Admin) ───────────────────────────
+router.patch('/users/:id/verify', adminAuth, async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+    const { verified } = req.body; // true = verify, false = unverify
+
+    const [[user]] = await db.query('SELECT id, first_name, is_verified FROM users WHERE id = ?', [userId]);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    await db.query('UPDATE users SET is_verified = ? WHERE id = ?', [verified ? 1 : 0, userId]);
+
+    // Send notification to the user
+    const msg = verified
+      ? `🎉 Congratulations! Your account has been verified by ShadowQuant Admin. You now have full access to all platform features.`
+      : `Your account verification has been revoked. Please contact support for assistance.`;
+    await db.query(
+      `INSERT INTO notifications (user_id, type, message, is_read) VALUES (?, 'SYSTEM', ?, 0)`,
+      [userId, msg]
+    );
+
+    res.json({ message: `User ${verified ? 'verified' : 'unverified'} successfully`, is_verified: verified });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

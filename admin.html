@@ -322,6 +322,23 @@ select.form-input{cursor:pointer}
 
 <div class="toasts" id="toasts"></div>
 
+<!-- VERIFY USER MODAL -->
+<div class="modal-overlay" id="verifyModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="verifyModalTitle">✔ Verify User</div>
+      <button class="modal-close" onclick="closeModal('verifyModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="verifyModalBody"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('verifyModal')">Cancel</button>
+      <button class="btn btn-approve" id="verifyConfirmBtn" style="padding:10px 20px;font-size:13px" onclick="submitVerify()">✔ Confirm Verify</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:3000/api'
@@ -845,7 +862,7 @@ function renderUsersLedger() {
   el.innerHTML = `
     <input type="text" id="usersSearchInput" placeholder="Search by name, email or PAN..." value="${usersSearchQuery}" oninput="debounceSearchUsers(this.value)" class="form-input" style="margin: 16px; font-size:12px; padding:8px 12px; width: 320px;" />
     
-    <div style="min-height: 230px;"><table class="tbl"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>PAN</th><th>Status</th><th>Joined</th></tr></thead>
+    <div style="min-height: 230px;"><table class="tbl"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>PAN</th><th>Status</th><th>Verified</th><th>Joined</th><th>Action</th></tr></thead>
       <tbody>${pageItems.map(u=>`<tr>
         <td><span style="font-family:'DM Mono',monospace;color:var(--gold)">#${u.id}</span></td>
         <td>${u.first_name||''} ${u.last_name||''}</td>
@@ -853,7 +870,17 @@ function renderUsersLedger() {
         <td style="font-family:'DM Mono',monospace;font-size:12px">${maskPhone(u.phone_number)}</td>
         <td style="font-family:'DM Mono',monospace;font-size:12px">${maskPAN(u.pan_number)}</td>
         <td>${u.is_active?'<span class="badge badge-green">Active</span>':'<span class="badge badge-red">Inactive</span>'}</td>
+        <td>${u.is_verified
+          ? '<span class="badge badge-green">✔ Verified</span>'
+          : '<span class="badge badge-amber">⏳ Pending</span>'}
+        </td>
         <td style="font-size:11px;color:var(--text3)">${fmtDate(u.created_at)}</td>
+        <td>
+          ${u.is_verified
+            ? `<button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;border-color:var(--red);color:var(--red)" onclick="openVerifyModal(${u.id},'${u.first_name} ${u.last_name}',false)">Revoke</button>`
+            : `<button class="btn btn-approve" style="font-size:11px;padding:4px 10px" onclick="openVerifyModal(${u.id},'${u.first_name} ${u.last_name}',true)">✔ Verify</button>`
+          }
+        </td>
       </tr>`).join('')}
     </tbody></table></div>
 
@@ -894,6 +921,54 @@ function nextUsersPage() {
   if (currentUsersPage < maxPages) {
     currentUsersPage++;
     renderUsersLedger();
+  }
+}
+
+// ── VERIFY USER ────────────────────────────────────────────────
+let currentVerifyUserId = null;
+let currentVerifyAction = true;
+
+function openVerifyModal(userId, userName, doVerify) {
+  currentVerifyUserId = userId;
+  currentVerifyAction = doVerify;
+  const title = document.getElementById('verifyModalTitle');
+  const body  = document.getElementById('verifyModalBody');
+  const btn   = document.getElementById('verifyConfirmBtn');
+
+  if (doVerify) {
+    title.textContent = '✔ Verify User';
+    body.innerHTML = `
+      <div style="background:var(--green-dim);border:1px solid rgba(40,214,138,.2);border-radius:var(--r);padding:16px;margin-bottom:12px">
+        <div style="font-size:12px;color:var(--green);font-weight:700;margin-bottom:4px">USER #${userId}</div>
+        <div style="font-weight:700;font-size:15px">${userName}</div>
+      </div>
+      <p style="font-size:13px;color:var(--text2)">This will mark the user as <strong style="color:var(--green)">Verified</strong> and send them a notification. Their profile will show a verified badge.</p>
+    `;
+    btn.className = 'btn btn-approve';
+    btn.textContent = '✔ Verify User';
+  } else {
+    title.textContent = '⚠ Revoke Verification';
+    body.innerHTML = `
+      <div style="background:var(--red-dim);border:1px solid rgba(255,79,79,.2);border-radius:var(--r);padding:16px;margin-bottom:12px">
+        <div style="font-size:12px;color:var(--red);font-weight:700;margin-bottom:4px">USER #${userId}</div>
+        <div style="font-weight:700;font-size:15px">${userName}</div>
+      </div>
+      <p style="font-size:13px;color:var(--text2)">This will remove the user's verified status and notify them. Are you sure?</p>
+    `;
+    btn.className = 'btn btn-reject';
+    btn.textContent = '⚠ Revoke Verification';
+  }
+  document.getElementById('verifyModal').classList.add('open');
+}
+
+async function submitVerify() {
+  const r = await api(`/admin/users/${currentVerifyUserId}/verify`, 'PATCH', { verified: currentVerifyAction });
+  if (r?.ok) {
+    toast(currentVerifyAction ? '✔ User verified successfully!' : 'Verification revoked', currentVerifyAction ? 'success' : 'info');
+    closeModal('verifyModal');
+    loadUsers();
+  } else {
+    toast(r?.data?.error || 'Action failed', 'error');
   }
 }
 
