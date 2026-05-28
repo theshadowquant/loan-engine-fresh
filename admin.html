@@ -563,7 +563,7 @@ let applicationsSearchDebounce = null;
 async function loadApplications(silent = false) {
   const el = document.getElementById('appsBody');
   if (!silent) el.innerHTML = getSkeletonLoader();
-  const r = await api('/loan-applications');
+  const r = await api('/admin/applications');
   if (!r?.ok) { el.innerHTML=`<div class="empty"><div class="empty-title">Failed to load</div></div>`; return; }
   allApps = r.data.applications || [];
   renderAppsLedger();
