@@ -1403,7 +1403,7 @@
       .stat { padding: 14px 14px; }
       .stat-val { font-size: 20px !important; }
 
-      /* Dashboard hero: credit card full-width, then KPI row below */
+      /* Dashboard hero: credit card full-width, then KPI 2x2 grid */
       #page-dashboard .stats-grid {
         display: flex !important;
         flex-direction: column !important;
@@ -1414,34 +1414,42 @@
         height: 180px !important;
         width: 100% !important;
       }
-      /* KPI row: 2 groups side by side */
+      /* KPI row = 2-column grid; 4 stat cards flow in row-major order:
+         [Total Limit]    [Active Products]
+         [Applications]   [Next Payment Due]   */
       .dash-kpi-row {
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
         gap: 10px !important;
       }
-      /* Each KPI group stacks its 2 stats vertically */
+      /* Make groups transparent to layout so their children
+         become direct grid items (row-major placement) */
       .dash-kpi-group {
+        display: contents !important;
+      }
+      /* Stat cards inside the groups: reset all inline height/flex */
+      .dash-kpi-group > .stat,
+      .dash-kpi-group > #cardCountdownBanner {
         display: flex !important;
         flex-direction: column !important;
-        gap: 10px !important;
-        height: auto !important;
-      }
-      /* Fix inline height on individual stats inside groups */
-      .dash-kpi-group .stat,
-      .dash-kpi-group #cardCountdownBanner {
+        justify-content: center !important;
         height: auto !important;
         min-height: 80px !important;
         flex: unset !important;
         margin-bottom: 0 !important;
       }
-      /* Countdown banner text smaller on mobile */
+      /* Countdown banner compact on mobile */
       #cardCountdownBanner {
         padding: 10px 12px !important;
+        font-size: 11px !important;
+      }
+      #cardCountdownBanner > div:first-child {
+        font-size: 8px !important;
       }
       #cardCountdownBanner .btn {
         font-size: 10px !important;
-        padding: 6px 8px !important;
+        padding: 5px 8px !important;
+        margin-top: 6px !important;
       }
 
       /* grid2: stack on mobile */
