@@ -9,3 +9,13 @@ exports.getAll = async (req, res, next) => {
     res.json({ notifications: rows });
   } catch (err) { next(err); }
 };
+
+exports.markAllRead = async (req, res, next) => {
+  try {
+    await db.query(
+      'UPDATE notifications SET is_read = 1 WHERE user_id = ?',
+      [req.user.id]
+    );
+    res.json({ success: true });
+  } catch (err) { next(err); }
+};
