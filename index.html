@@ -1998,7 +1998,14 @@
 
   <script>
     // ─── CONFIG ───────────────────────────────────────────────────
-    const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    const API = (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.startsWith('192.168.') ||
+      window.location.hostname.startsWith('10.') ||
+      window.location.hostname.startsWith('172.') ||
+      window.location.protocol === 'file:'
+    )
       ? 'http://localhost:3000/api'
       : 'https://loan-engine-backend-rznd.onrender.com/api';
     let TOKEN = localStorage.getItem('sq_token');

@@ -16,7 +16,17 @@ module.exports = async (req, res, next) => {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 
-  // Check ADMIN role in database
+  // Check ADMIN role in memory first (extremely fast), then fall back to database if roles claim is missing
+  if (decoded.roles) {
+    if (decoded.roles.includes('ADMIN')) {
+      req.user = decoded;
+      return next();
+    } else {
+      return res.status(403).json({ error: 'Access denied. Admin privileges required.' });
+    }
+  }
+
+  // Check ADMIN role in database (Fallback for older tokens/sessions)
   try {
     const [[roleRow]] = await db.query(
       `SELECT ur.id FROM user_roles ur

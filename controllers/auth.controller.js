@@ -32,7 +32,7 @@ exports.register = async (req, res, next) => {
 
     const hash = await bcrypt.hash(
       password,
-      parseInt(process.env.BCRYPT_ROUNDS) || 10
+      parseInt(process.env.BCRYPT_ROUNDS) || 8
     );
 
     const [result] = await db.query(
@@ -110,8 +110,17 @@ exports.login = async (req, res, next) => {
       }
     }
 
+    // Fetch user roles
+    const [userRoles] = await db.query(
+      `SELECT r.name FROM user_roles ur
+       JOIN roles r ON ur.role_id = r.id
+       WHERE ur.user_id = ? AND ur.is_active = 1`,
+      [user.id]
+    );
+    const roles = userRoles.map(r => r.name);
+
     const accessToken = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: user.id, email: user.email, roles },
       process.env.JWT_ACCESS_SECRET,
       { expiresIn: process.env.JWT_ACCESS_EXPIRES || '15m' }
     );
@@ -123,7 +132,8 @@ exports.login = async (req, res, next) => {
         id: user.id,
         email: user.email,
         first_name: user.first_name,
-        last_name: user.last_name
+        last_name: user.last_name,
+        roles
       }
     });
 

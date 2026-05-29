@@ -342,7 +342,14 @@ select.form-input{cursor:pointer}
 </div>
 
 <script>
-const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+const API = (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname.startsWith('192.168.') ||
+  window.location.hostname.startsWith('10.') ||
+  window.location.hostname.startsWith('172.') ||
+  window.location.protocol === 'file:'
+)
   ? 'http://localhost:3000/api'
   : 'https://loan-engine-backend-rznd.onrender.com/api';
 let TOKEN = localStorage.getItem('sq_admin_token') || localStorage.getItem('sq_token');
@@ -434,28 +441,40 @@ async function doLogin() {
       return; 
     }
 
-    // Step 2: Verify this user actually has ADMIN role before granting access
-    const roleCheck = await fetch(`${API}/admin/applications`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + d.accessToken }
-    });
+    // Step 2: Check if roles are embedded in the response directly (highly optimized)
+    if (d.user && d.user.roles) {
+      if (!d.user.roles.includes('ADMIN')) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        msg.className = 'auth-msg error';
+        msg.textContent = '⛔ Access denied. This account does not have administrator privileges.';
+        msg.style.display = 'block';
+        return;
+      }
+    } else {
+      // Fallback: If roles are not in response, verify via API call
+      const roleCheck = await fetch(`${API}/admin/applications`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + d.accessToken }
+      });
 
-    if (roleCheck.status === 403) {
-      btn.disabled = false;
-      btn.textContent = originalText;
-      msg.className = 'auth-msg error';
-      msg.textContent = '⛔ Access denied. This account does not have administrator privileges.';
-      msg.style.display = 'block';
-      return;
-    }
+      if (roleCheck.status === 403) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        msg.className = 'auth-msg error';
+        msg.textContent = '⛔ Access denied. This account does not have administrator privileges.';
+        msg.style.display = 'block';
+        return;
+      }
 
-    if (roleCheck.status === 401) {
-      btn.disabled = false;
-      btn.textContent = originalText;
-      msg.className = 'auth-msg error';
-      msg.textContent = 'Authentication error. Please try again.';
-      msg.style.display = 'block';
-      return;
+      if (roleCheck.status === 401) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        msg.className = 'auth-msg error';
+        msg.textContent = 'Authentication error. Please try again.';
+        msg.style.display = 'block';
+        return;
+      }
     }
 
     TOKEN = d.accessToken;
