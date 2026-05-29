@@ -8,7 +8,7 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'loan_engine',
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: parseInt(process.env.DB_POOL_SIZE) || 3,
   decimalNumbers: false,
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
 });
