@@ -1,10 +1,5 @@
 const mysql = require('mysql2/promise');
-let bcrypt;
-try {
-  bcrypt = require('bcrypt');
-} catch (e) {
-  bcrypt = require('bcryptjs');
-}
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 async function seedAdmin() {
