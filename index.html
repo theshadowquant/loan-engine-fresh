@@ -5,9 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ShadowQuant Fintech</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -66,158 +65,218 @@
       overflow-x: hidden
     }
 
-    /* AUTH */
+    /* ═══ AUTH SCREEN ═══ */
     .auth-screen {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(ellipse at 30% 50%, rgba(212, 168, 67, 0.05) 0%, transparent 60%)
+      position: relative;
+      overflow: hidden;
     }
 
-    .auth-card {
+    /* WebGL Canvas behind auth */
+    #authCanvas {
+      position: absolute;
+      inset: 0;
       width: 100%;
-      max-width: 440px;
-      background: var(--bg2);
-      border: 1px solid var(--border2);
-      border-radius: 24px;
+      height: 100%;
+      z-index: 0;
+    }
+
+    /* dark overlay so card text is always readable */
+    .auth-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.65) 100%);
+      z-index: 1;
+    }
+
+    /* animated glowing ring badge */
+    .auth-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px 5px 10px;
+      border-radius: 99px;
+      background: rgba(28,82,255,0.12);
+      border: 1px solid rgba(28,82,255,0.3);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+      backdrop-filter: blur(8px);
+    }
+    .auth-badge-dot {
+      width: 7px; height: 7px;
+      background: var(--gold);
+      border-radius: 50%;
+      animation: authPing 1.4s ease-in-out infinite;
+    }
+    @keyframes authPing {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.4); }
+    }
+
+    /* Main glassmorphic card */
+    .auth-card {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 460px;
+      background: rgba(11, 15, 25, 0.72);
+      border: 1px solid rgba(28, 82, 255, 0.18);
+      border-radius: 28px;
       padding: 44px;
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5)
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04),
+        0 32px 80px rgba(0, 0, 0, 0.7),
+        0 0 60px rgba(28,82,255,0.08) inset;
+      animation: cardFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes cardFadeIn {
+      from { opacity: 0; transform: translateY(24px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Glowing top edge accent */
+    .auth-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 15%; right: 15%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(28,82,255,0.8), rgba(99,143,255,0.6), transparent);
+      border-radius: 99px;
     }
 
     .auth-logo {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 26px;
+      font-size: 28px;
       font-weight: 800;
       color: var(--gold);
-      margin-bottom: 2px
+      margin-bottom: 2px;
+      letter-spacing: -0.5px;
     }
-
-    .auth-logo span {
-      color: var(--text)
-    }
+    .auth-logo span { color: var(--text); }
 
     .auth-tagline {
-      font-size: 11px;
-      letter-spacing: 2px;
+      font-size: 10px;
+      letter-spacing: 2.5px;
       text-transform: uppercase;
       color: var(--text3);
-      margin-bottom: 36px
+      margin-bottom: 30px;
     }
 
     .auth-tabs {
       display: flex;
-      background: var(--bg3);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
       border-radius: var(--r);
       padding: 4px;
-      margin-bottom: 28px;
-      gap: 4px
+      margin-bottom: 24px;
+      gap: 4px;
     }
-
     .auth-tab {
       flex: 1;
       text-align: center;
       padding: 9px;
       border-radius: 8px;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       color: var(--text3);
-      transition: all .15s
+      transition: all 0.2s;
     }
-
     .auth-tab.active {
-      background: var(--surface2);
-      color: var(--text)
+      background: rgba(28,82,255,0.2);
+      color: var(--gold);
+      border: 1px solid rgba(28,82,255,0.25);
     }
 
-    .form-group {
-      margin-bottom: 14px
-    }
-
+    .form-group { margin-bottom: 14px; }
     .form-label {
       display: block;
       font-size: 11px;
       color: var(--text3);
-      letter-spacing: .5px;
-      margin-bottom: 5px
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
     }
-
     .form-input {
       width: 100%;
       padding: 11px 14px;
-      background: var(--bg3);
-      border: 1px solid var(--border2);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: var(--r);
       color: var(--text);
       font-size: 14px;
       font-family: 'Inter', sans-serif;
       outline: none;
-      transition: border-color .15s
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
     }
-
     .form-input:focus {
-      border-color: var(--gold)
+      border-color: rgba(28,82,255,0.55);
+      background: rgba(28,82,255,0.06);
+      box-shadow: 0 0 0 3px rgba(28,82,255,0.12);
     }
-
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px
+      gap: 12px;
     }
-
     .form-btn {
       width: 100%;
       padding: 13px;
-      background: var(--gold);
+      background: linear-gradient(135deg, #1c52ff 0%, #4b73ff 100%);
       border: none;
       border-radius: var(--r);
-      color: #000;
+      color: #fff;
       font-size: 14px;
       font-weight: 700;
       font-family: 'Plus Jakarta Sans', sans-serif;
       cursor: pointer;
       margin-top: 8px;
-      transition: all .15s;
-      letter-spacing: .3px;
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
       display: flex;
       align-items: center;
-      justify-content: center
+      justify-content: center;
+      box-shadow: 0 4px 24px rgba(28,82,255,0.35);
+      position: relative;
+      overflow: hidden;
     }
-
-    .form-btn:hover {
-      background: var(--gold2);
-      transform: translateY(-1px)
+    .form-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.2s;
     }
-
-    .form-btn:active {
-      transform: translateY(1px) scale(0.98)
-    }
-
-    .form-btn:disabled {
-      opacity: .6;
-      cursor: not-allowed;
-      transform: none !important
-    }
+    .form-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(28,82,255,0.5); }
+    .form-btn:hover::after { opacity: 1; }
+    .form-btn:active { transform: translateY(1px) scale(0.98); }
+    .form-btn:disabled { opacity: .6; cursor: not-allowed; transform: none !important; }
 
     .auth-msg {
       padding: 10px 14px;
       border-radius: var(--r);
       font-size: 13px;
       margin-bottom: 14px;
-      display: none
+      display: none;
     }
-
     .auth-msg.error {
       background: var(--red-dim);
-      border: 1px solid rgba(255, 79, 79, .3);
-      color: var(--red)
+      border: 1px solid rgba(255,79,79,.3);
+      color: var(--red);
     }
-
     .auth-msg.success {
       background: var(--green-dim);
-      border: 1px solid rgba(40, 214, 138, .3);
-      color: var(--green)
+      border: 1px solid rgba(40,214,138,.3);
+      color: var(--green);
     }
 
     /* APP SHELL */
@@ -1594,9 +1653,14 @@
 
   <!-- ═══ AUTH ═══ -->
   <div id="authScreen" class="auth-screen">
+    <!-- WebGL Nebula Background -->
+    <canvas id="authCanvas"></canvas>
+    <div class="auth-overlay"></div>
+
     <div class="auth-card">
+      <div class="auth-badge"><span class="auth-badge-dot"></span>ShadowQuant · Fintech</div>
       <div class="auth-logo" style="font-family: 'Plus Jakarta Sans', sans-serif;">Shadow<span>Quant</span></div>
-      <div class="auth-tagline">Fintech Private Limited · Loan Management</div>
+      <div class="auth-tagline">Loan Management · Private Limited</div>
       <div id="authMsg" class="auth-msg"></div>
       <div class="auth-tabs">
         <div class="auth-tab active" onclick="authTab('login')">Sign In</div>
@@ -2012,6 +2076,111 @@
     let USER = JSON.parse(localStorage.getItem('sq_user') || 'null');
     let CURRENT_PAYMENTS = [];
     let pollingInterval = null;
+
+    // ─── CELESTIAL NEBULA SHADER (Auth Background) ──────────────────
+    (function initNebulaShader() {
+      const canvas = document.getElementById('authCanvas');
+      if (!canvas || typeof THREE === 'undefined') return;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      const vertexShader = `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = vec4(position, 1.0);
+        }
+      `;
+      const fragmentShader = `
+        precision highp float;
+        uniform vec2 u_resolution;
+        uniform float u_time;
+        uniform vec2 u_mouse;
+
+        float random(vec2 st) {
+          return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+        }
+        float noise(vec2 st) {
+          vec2 i = floor(st);
+          vec2 f = fract(st);
+          float a = random(i);
+          float b = random(i + vec2(1.0, 0.0));
+          float c = random(i + vec2(0.0, 1.0));
+          float d = random(i + vec2(1.0, 1.0));
+          vec2 u = f * f * (3.0 - 2.0 * f);
+          return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.y * u.x;
+        }
+        float fbm(vec2 st) {
+          float v = 0.0; float amp = 0.5;
+          for (int i = 0; i < 6; i++) { v += amp * noise(st); st *= 2.0; amp *= 0.5; }
+          return v;
+        }
+        vec3 hsl2rgb(vec3 c) {
+          vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),6.0)-3.0)-1.0,0.0,1.0);
+          return c.z * mix(vec3(1.0), rgb, c.y);
+        }
+        void main() {
+          vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution) / min(u_resolution.y, u_resolution.x);
+          uv *= 1.4;
+          vec2 m = (u_mouse / u_resolution - 0.5) * 0.5;
+          uv += m;
+          float f = fbm(uv + vec2(u_time * 0.08, u_time * 0.04));
+          float t = fbm(uv + f + vec2(u_time * 0.04, u_time * 0.015));
+          float nebula = pow(t, 2.2);
+          // Deep blue-violet nebula palette (matches ShadowQuant brand)
+          vec3 col = hsl2rgb(vec3(0.62 + nebula * 0.15, 0.75, 0.38));
+          col *= nebula * 3.0;
+          // Stars
+          float sv = random(gl_FragCoord.xy * 0.002);
+          if (sv > 0.997) col += vec3((sv - 0.997) / 0.003 * 3.0);
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `;
+
+      const mat = new THREE.ShaderMaterial({
+        vertexShader, fragmentShader,
+        uniforms: {
+          u_time: { value: 0 },
+          u_resolution: { value: new THREE.Vector2() },
+          u_mouse: { value: new THREE.Vector2(0, 0) }
+        }
+      });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
+      scene.add(mesh);
+
+      function resize() {
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        renderer.setSize(w, h, false);
+        mat.uniforms.u_resolution.value.set(w, h);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      window.addEventListener('mousemove', e => {
+        mat.uniforms.u_mouse.value.set(e.clientX, canvas.clientHeight - e.clientY);
+      });
+
+      let rafId;
+      function animate() {
+        rafId = requestAnimationFrame(animate);
+        mat.uniforms.u_time.value += 0.008;
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      // Stop when auth screen is hidden to save GPU
+      const obs = new MutationObserver(() => {
+        const hidden = document.getElementById('authScreen').style.display === 'none';
+        if (hidden && rafId) { cancelAnimationFrame(rafId); rafId = null; }
+        else if (!hidden && !rafId) { animate(); }
+      });
+      const authEl = document.getElementById('authScreen');
+      if (authEl) obs.observe(authEl, { attributes: true, attributeFilter: ['style'] });
+    })();
+
 
     // ─── LOAN APPLY PARAMETERS ──────────────────────────────────
     function onLoanTypeChange(type) {
