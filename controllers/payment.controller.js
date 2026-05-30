@@ -30,53 +30,82 @@ exports.makePayment = async (req, res, next) => {
       [loanId, req.user.id, amount, payment_method, transaction_reference, 'SUCCESS']
     );
 
-    // Mark exactly ONE next PENDING EMI as PAID (use single quotes — Aiven uses ANSI_QUOTES mode)
-    const [[nextEMI]] = await db.query(
-      "SELECT * FROM emi_schedule WHERE loan_id = ? AND status = 'PENDING' ORDER BY installment_number ASC LIMIT 1",
-      [loanId]
-    );
+    const outstandingPrincipal = parseFloat(loan.outstanding_principal || 0);
+    const paymentAmount = parseFloat(amount || 0);
+    const closureTolerance = parseFloat(process.env.CLOSURE_TOLERANCE || '1.00');
 
-    if (nextEMI) {
+    if (paymentAmount >= outstandingPrincipal - closureTolerance) {
+      // 1. FULL FORECLOSURE / PAYOFF
+      // Mark all remaining pending EMIs as PAID
       await db.query(
-        "UPDATE emi_schedule SET status = 'PAID' WHERE id = ?",
-        [nextEMI.id]
+        "UPDATE emi_schedule SET status = 'PAID' WHERE loan_id = ? AND status = 'PENDING'",
+        [loanId]
       );
-
-      const principalPaid = parseFloat(nextEMI.principal_component || 0);
-      const totalPaidAmount = parseFloat(amount || 0);
-
-      // Reduce outstanding_principal in loans table by the principal component of the EMI
+      // Close the loan and set outstanding to 0
       await db.query(
-        'UPDATE loans SET outstanding_principal = GREATEST(0, outstanding_principal - ?) WHERE id = ?',
-        [principalPaid, loanId]
+        "UPDATE loans SET status = 'CLOSED', outstanding_principal = 0 WHERE id = ?",
+        [loanId]
       );
-
-      // Update loan_summary table: add to amount_paid, reduce outstanding_principal
+      // Update loan summary
       await db.query(
         `UPDATE loan_summary 
          SET amount_paid = amount_paid + ?, 
-             outstanding_principal = GREATEST(0, outstanding_principal - ?) 
+             outstanding_principal = 0 
          WHERE loan_id = ?`,
-        [totalPaidAmount, principalPaid, loanId]
+        [paymentAmount, loanId]
       );
     } else {
-      // Fallback: if there are no pending EMIs but they still pay
-      const totalPaidAmount = parseFloat(amount || 0);
+      // 2. PARTIAL PAYMENT / PREPAYMENT / REGULAR EMI(s)
+      // Retrieve all pending EMIs ordered by installment number
+      const [pendingEMIs] = await db.query(
+        "SELECT * FROM emi_schedule WHERE loan_id = ? AND status = 'PENDING' ORDER BY installment_number ASC",
+        [loanId]
+      );
+
+      let remainingPayment = paymentAmount;
+      let totalPrincipalPaid = 0;
+
+      for (const emi of pendingEMIs) {
+        const emiAmount = parseFloat(emi.emi_amount || 0);
+        if (remainingPayment >= emiAmount) {
+          // Mark this EMI as paid
+          await db.query(
+            "UPDATE emi_schedule SET status = 'PAID' WHERE id = ?",
+            [emi.id]
+          );
+          totalPrincipalPaid += parseFloat(emi.principal_component || 0);
+          remainingPayment -= emiAmount;
+        } else {
+          // Not enough to fully pay the next EMI.
+          // Apply leftover amount directly as prepayment to reduce the outstanding principal
+          if (remainingPayment > 0) {
+            totalPrincipalPaid += remainingPayment;
+            remainingPayment = 0;
+          }
+          break;
+        }
+      }
+
+      if (remainingPayment > 0) {
+        totalPrincipalPaid += remainingPayment;
+      }
+
+      // Reduce outstanding principal in loans table
       await db.query(
         'UPDATE loans SET outstanding_principal = GREATEST(0, outstanding_principal - ?) WHERE id = ?',
-        [totalPaidAmount, loanId]
+        [totalPrincipalPaid, loanId]
       );
+
+      // Update loan_summary table
       await db.query(
         `UPDATE loan_summary 
          SET amount_paid = amount_paid + ?, 
              outstanding_principal = GREATEST(0, outstanding_principal - ?) 
          WHERE loan_id = ?`,
-        [totalPaidAmount, totalPaidAmount, loanId]
+        [paymentAmount, totalPrincipalPaid, loanId]
       );
-    }
 
-    // If no more PENDING EMIs, close the loan
-    if (nextEMI) {
+      // If all pending EMIs are paid, close the loan
       const [[{ remaining }]] = await db.query(
         "SELECT COUNT(*) AS remaining FROM emi_schedule WHERE loan_id = ? AND status = 'PENDING'",
         [loanId]
