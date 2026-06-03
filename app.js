@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path         = require('path');
 const express      = require('express');
 const cors         = require('cors');
 const helmet       = require('helmet');
@@ -61,8 +62,19 @@ app.use('/api/notifications',                     require('./routes/notification
 app.use('/api/reports',                           require('./routes/report.routes'));
 app.use('/api/admin',                             require('./routes/admin.routes'));
 
-// ── 404 ──────────────────────────────────────────────────────
-app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
+// ── Frontend pages ───────────────────────────────────────────
+// Serve the static HTML files — this is how Vercel gets the frontend
+const HTML = path.join(__dirname);
+app.get('/',           (req, res) => res.sendFile(path.join(HTML, 'index.html')));
+app.get('/index.html', (req, res) => res.sendFile(path.join(HTML, 'index.html')));
+app.get('/admin',      (req, res) => res.sendFile(path.join(HTML, 'admin.html')));
+app.get('/admin.html', (req, res) => res.sendFile(path.join(HTML, 'admin.html')));
+
+// ── API 404 (only for unmatched /api/* calls) ─────────────────
+app.use('/api', (req, res) => res.status(404).json({ error: 'API route not found' }));
+
+// ── Fallback: any other path → index.html (handles page refresh)
+app.use((req, res) => res.sendFile(path.join(HTML, 'index.html')));
 
 // ── Error Handler ────────────────────────────────────────────
 app.use(errorHandler);
