@@ -28,7 +28,7 @@ export const CelestialSphere: React.FC<CelestialSphereProps> = ({
     if (!mountRef.current) return;
 
     const currentMount = mountRef.current;
-    let scene: THREE.Scene, camera: THREE.OrthographicCamera, renderer: THREE.WebGLRenderer, material: THREE.ShaderMaterial, mesh: THREE.Mesh;
+    let scene: THREE.Scene, camera: THREE.OrthographicCamera, renderer: THREE.WebGLRenderer, material: THREE.ShaderMaterial, geometry: THREE.PlaneGeometry, mesh: THREE.Mesh;
     let animationFrameId: number;
     const mouse = new THREE.Vector2(0.5, 0.5);
 
@@ -136,7 +136,7 @@ export const CelestialSphere: React.FC<CelestialSphereProps> = ({
         },
       });
 
-      const geometry = new THREE.PlaneGeometry(2, 2);
+      geometry = new THREE.PlaneGeometry(2, 2);
       mesh = new THREE.Mesh(geometry, material);
       scene.add(mesh);
 
@@ -183,10 +183,14 @@ export const CelestialSphere: React.FC<CelestialSphereProps> = ({
     return () => {
       removeEventListeners();
       cancelAnimationFrame(animationFrameId);
-      if (currentMount && renderer.domElement) {
-        currentMount.removeChild(renderer.domElement);
+      if (renderer) {
+        if (currentMount && renderer.domElement) {
+          currentMount.removeChild(renderer.domElement);
+        }
+        renderer.dispose();
       }
-      renderer.dispose();
+      if (geometry) geometry.dispose();
+      if (material)  material.dispose();
     };
   }, [hue, speed, zoom, particleSize]);
 

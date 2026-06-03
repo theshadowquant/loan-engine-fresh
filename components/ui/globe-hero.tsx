@@ -6,11 +6,9 @@ import React, { useRef } from "react";
 import * as THREE from "three";
 import { cn } from "@/lib/utils";
 
-interface DotGlobeHeroProps {
+interface DotGlobeHeroProps extends React.HTMLAttributes<HTMLDivElement> {
   rotationSpeed?: number;
   globeRadius?: number;
-  className?: string;
-  children?: React.ReactNode;
 }
 
 const Globe: React.FC<{

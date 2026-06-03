@@ -30,6 +30,13 @@ exports.getOne = async (req, res, next) => {
 
 exports.getEMISchedule = async (req, res, next) => {
   try {
+    // Ownership check: verify the loan belongs to the requesting user
+    const [[loan]] = await db.query(
+      'SELECT id FROM loans WHERE id = ? AND user_id = ?',
+      [req.params.id, req.user.id]
+    );
+    if (!loan) return res.status(404).json({ error: 'Loan not found' });
+
     const [rows] = await db.query(
       'SELECT * FROM emi_schedule WHERE loan_id = ? ORDER BY installment_number',
       [req.params.id]
@@ -40,6 +47,13 @@ exports.getEMISchedule = async (req, res, next) => {
 
 exports.getPayments = async (req, res, next) => {
   try {
+    // Ownership check: verify the loan belongs to the requesting user
+    const [[loan]] = await db.query(
+      'SELECT id FROM loans WHERE id = ? AND user_id = ?',
+      [req.params.id, req.user.id]
+    );
+    if (!loan) return res.status(404).json({ error: 'Loan not found' });
+
     const [rows] = await db.query(
       'SELECT * FROM payments WHERE loan_id = ? ORDER BY payment_date DESC',
       [req.params.id]
@@ -47,3 +61,4 @@ exports.getPayments = async (req, res, next) => {
     res.json({ payments: rows });
   } catch (err) { next(err); }
 };
+

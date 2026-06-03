@@ -2,8 +2,12 @@
   "name": "loan-engine",
   "version": "1.0.0",
   "main": "server.js",
+  "engines": {
+    "node": ">=20.x"
+  },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -19,5 +23,19 @@
     "node-cron": "^3.0.3",
     "uuid": "^9.0.0",
     "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@react-three/drei": "^9",
+    "@react-three/fiber": "^8",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/three": "^0.160.0",
+    "framer-motion": "^11.18.2",
+    "lucide-react": "^0.400.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.6.1",
+    "three": "^0.160.1",
+    "typescript": "^5.9.3"
   }
 }

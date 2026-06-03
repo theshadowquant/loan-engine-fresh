@@ -342,6 +342,9 @@ select.form-input{cursor:pointer}
 </div>
 
 <script>
+// Localhost / LAN / file:// → hit local Express server
+// Vercel (or any other host) → relative /api hits the same Vercel deployment
+// This eliminates the Render.com cold-start delay (10-30s) entirely.
 const API = (
   window.location.hostname === 'localhost' ||
   window.location.hostname === '127.0.0.1' ||
@@ -351,7 +354,7 @@ const API = (
   window.location.protocol === 'file:'
 )
   ? 'http://localhost:3000/api'
-  : 'https://loan-engine-backend-rznd.onrender.com/api';
+  : '/api';
 let TOKEN = localStorage.getItem('sq_admin_token') || localStorage.getItem('sq_token');
 let USER  = JSON.parse(localStorage.getItem('sq_admin_user') || 'null');
 let allApps = [];

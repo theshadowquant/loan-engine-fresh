@@ -1,8 +1,15 @@
 const bcrypt = require('bcrypt');
-
-const jwt = require('jsonwebtoken');
-const db = require('../config/db');
+const jwt    = require('jsonwebtoken');
+const db     = require('../config/db');
 require('dotenv').config();
+
+// ── Hash-migration guard ─────────────────────────────────────────────────────
+// This Set prevents the same user from having multiple concurrent bcrypt.hash()
+// jobs queued at once.  Without it, rapid/concurrent logins by the same user
+// would flood libuv's threadpool (UV_THREADPOOL_SIZE=4 by default) with
+// background hash jobs, causing ALL subsequent bcrypt.compare() calls to stall
+// for 20-30 seconds after a few hours of uptime.
+const migratingUsers = new Set();
 
 // ================= REGISTER =================
 exports.register = async (req, res, next) => {
@@ -67,12 +74,14 @@ exports.login = async (req, res, next) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
-    // 🔥 Normalize input (CRITICAL FIX)
-    email = email.trim().toLowerCase();
+    // Normalize input
+    email    = email.trim().toLowerCase();
     password = password.trim();
 
+    // Only fetch the columns we actually need (avoids sending password_hash etc. over the wire unnecessarily)
     const [[user]] = await db.query(
-      'SELECT * FROM users WHERE email = ?',
+      `SELECT id, email, first_name, last_name, password_hash, is_active
+       FROM users WHERE email = ?`,
       [email]
     );
 
@@ -80,30 +89,14 @@ exports.login = async (req, res, next) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    if (!user.is_active) {
+      return res.status(403).json({ error: 'Account is disabled. Please contact support.' });
+    }
+
     const match = await bcrypt.compare(password, user.password_hash);
 
     if (!match) {
       return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    // 🔥 Auto Hash Migration: If the stored hash uses more than BCRYPT_ROUNDS (8), re-hash it with 8 rounds to make future logins super-fast!
-    const hashParts = user.password_hash.split('$');
-    if (hashParts.length >= 4) {
-      const rounds = parseInt(hashParts[2], 10);
-      const targetRounds = parseInt(process.env.BCRYPT_ROUNDS) || 8;
-      if (rounds > targetRounds) {
-        bcrypt.hash(password, targetRounds).then(newHash => {
-          db.query('UPDATE users SET password_hash = ? WHERE id = ?', [newHash, user.id])
-            .then(() => {
-              console.log(`[Hash Migration] Successfully upgraded user ID ${user.id} password hash from ${rounds} to ${targetRounds} rounds.`);
-            })
-            .catch(err => {
-              console.error('[Hash Migration] Failed to update password hash:', err);
-            });
-        }).catch(err => {
-          console.error('[Hash Migration] Failed to re-hash password:', err);
-        });
-      }
     }
 
     // Fetch user roles
@@ -121,23 +114,56 @@ exports.login = async (req, res, next) => {
       { expiresIn: process.env.JWT_ACCESS_EXPIRES || '15m' }
     );
 
+    // ── Send the response FIRST so the user is never kept waiting ────────────
     res.json({
       message: 'Login success',
       accessToken,
       user: {
-        id: user.id,
-        email: user.email,
+        id:         user.id,
+        email:      user.email,
         first_name: user.first_name,
-        last_name: user.last_name,
-        roles
+        last_name:  user.last_name,
+        roles,
       }
     });
 
+    // ── Background hash-migration (AFTER response is sent) ───────────────────
+    // Downgrade old high-cost hashes to BCRYPT_ROUNDS for future fast logins.
+    // The migratingUsers Set ensures that even under concurrent logins for the
+    // same account we only ever queue ONE bcrypt.hash() at a time, preventing
+    // libuv threadpool saturation (the root cause of the 20-30s login delay).
+    const targetRounds = parseInt(process.env.BCRYPT_ROUNDS) || 8;
+    const hashParts    = user.password_hash.split('$');
+
+    if (hashParts.length >= 4) {
+      const currentRounds = parseInt(hashParts[2], 10);
+
+      if (currentRounds > targetRounds && !migratingUsers.has(user.id)) {
+        migratingUsers.add(user.id);
+
+        bcrypt.hash(password, targetRounds)
+          .then(newHash => db.query(
+            'UPDATE users SET password_hash = ? WHERE id = ?',
+            [newHash, user.id]
+          ))
+          .then(() => {
+            console.log(`[Hash Migration] User ${user.id}: rounds ${currentRounds} → ${targetRounds}`);
+          })
+          .catch(err => {
+            console.error('[Hash Migration] Failed for user', user.id, err.message);
+          })
+          .finally(() => {
+            migratingUsers.delete(user.id);
+          });
+      }
+    }
+
   } catch (err) {
-    console.error("LOGIN ERROR:", err);
+    console.error('LOGIN ERROR:', err);
     next(err);
   }
 };
+
 
 
 // ================= ME =================
