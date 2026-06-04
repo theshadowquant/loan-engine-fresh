@@ -36,7 +36,11 @@ const paymentLimiter = rateLimit({
 
 // ── Core Middleware ──────────────────────────────────────────
 app.use(cors({ origin: '*', methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], allowedHeaders: ['Content-Type','Authorization'] }));
-app.use(helmet());
+app.use(helmet({
+  // Disable CSP — index.html and admin.html use inline <script> tags and onclick
+  // handlers that Helmet's default CSP silently blocks, breaking all button clicks.
+  contentSecurityPolicy: false,
+}));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(globalLimiter);
